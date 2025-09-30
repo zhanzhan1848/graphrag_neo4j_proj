@@ -1,0 +1,13 @@
+# GraphRAG 基础服务测试脚本依赖包
+# 用于 scripts/test-services.py 脚本的运行
+
+# 数据库连接
+psycopg2-binary==2.9.7    # PostgreSQL 连接器
+neo4j==5.15.0             # Neo4j 官方驱动
+redis==5.0.1              # Redis 连接器
+
+# HTTP 请求
+requests==2.31.0          # HTTP 客户端库
+
+# 数据处理
+typing-extensions==4.8.0  # 类型注解扩展

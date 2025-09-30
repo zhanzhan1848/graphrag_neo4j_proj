@@ -1,4 +1,17 @@
-# Python
+# GraphRAG 知识库系统 - Git 忽略文件配置
+# 定义不应被版本控制跟踪的文件和目录
+
+# =============================================================================
+# 环境变量和配置文件
+# =============================================================================
+.env
+.env.local
+.env.*.local
+*.env
+
+# =============================================================================
+# Python 相关
+# =============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -16,6 +29,7 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -43,31 +57,6 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
-cover/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -82,12 +71,6 @@ ipython_config.py
 # pipenv
 Pipfile.lock
 
-# poetry
-poetry.lock
-
-# pdm
-.pdm.toml
-
 # PEP 582
 __pypackages__/
 
@@ -99,7 +82,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
@@ -125,25 +107,14 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-.idea/
-
-# VS Code
-.vscode/
-
-# Node.js
+# =============================================================================
+# Node.js 相关
+# =============================================================================
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
-.pnpm-debug.log*
 
 # Runtime data
 pids
@@ -173,6 +144,9 @@ build/Release
 # Dependency directories
 jspm_packages/
 
+# TypeScript v1 declaration files
+typings/
+
 # TypeScript cache
 *.tsbuildinfo
 
@@ -181,9 +155,6 @@ jspm_packages/
 
 # Optional eslint cache
 .eslintcache
-
-# Optional stylelint cache
-.stylelintcache
 
 # Microbundle cache
 .rpt2_cache/
@@ -206,7 +177,6 @@ jspm_packages/
 
 # Next.js build output
 .next
-out
 
 # Nuxt.js build / generate output
 .nuxt
@@ -219,126 +189,165 @@ public
 # Storybook build outputs
 .out
 .storybook-out
-storybook-static
 
-# Temporary folders
+# =============================================================================
+# Docker 相关
+# =============================================================================
+# Docker 数据卷 (如果使用本地挂载)
+docker-data/
+volumes/
+
+# Docker 构建缓存
+.dockerignore
+
+# =============================================================================
+# 数据库和存储相关
+# =============================================================================
+# PostgreSQL 数据文件
+postgres-data/
+pg_data/
+
+# Neo4j 数据文件
+neo4j-data/
+neo4j-logs/
+neo4j-import/
+neo4j-plugins/
+
+# Redis 数据文件
+redis-data/
+
+# MinIO 数据文件
+minio-data/
+
+# Weaviate 数据文件
+weaviate-data/
+
+# MinerU 数据文件
+mineru-data/
+mineru-output/
+
+# =============================================================================
+# 日志文件
+# =============================================================================
+logs/
+*.log
+log/
+
+# =============================================================================
+# 临时文件和缓存
+# =============================================================================
 tmp/
 temp/
+.tmp/
+.temp/
+*.tmp
+*.temp
 
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-.pnpm-debug.log*
-
-# Docker
-.dockerignore
-Dockerfile.dev
-docker-compose.override.yml
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Data directories
-data/
-uploads/
-storage/
-files/
-
-# Configuration files with secrets
-.env.local
-.env.production
-.env.development
-config/secrets.yml
-config/database.yml
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Backup files
-*.bak
-*.backup
-*.old
-*.orig
-*.swp
-*.swo
-*~
-
-# Archive files
-*.zip
-*.tar.gz
-*.rar
-*.7z
-
-# IDE and editor files
-*.sublime-project
-*.sublime-workspace
+# =============================================================================
+# IDE 和编辑器配置
+# =============================================================================
 .vscode/
 .idea/
-*.iml
-*.ipr
-*.iws
-
-# JetBrains IDEs
-.idea/
-*.iml
-*.ipr
-*.iws
-out/
-
-# Vim
 *.swp
 *.swo
 *~
 
-# Emacs
-*~
-\#*\#
-/.emacs.desktop
-/.emacs.desktop.lock
-*.elc
-auto-save-list
-tramp
-.\#*
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
 
-# Project specific
-# Neo4j data
-neo4j/
-# PostgreSQL data
-postgres/
-# Redis data
-redis/
-# MinIO data
-minio/
-# Weaviate data
-weaviate/
-# Application logs
-logs/
-# Uploaded files
-uploads/
-# Temporary processing files
-tmp/
-temp/
-# Model files (large)
+# =============================================================================
+# 操作系统相关
+# =============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# 安全和密钥文件
+# =============================================================================
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# =============================================================================
+# 测试和覆盖率报告
+# =============================================================================
+test-results/
+coverage-reports/
+.coverage
+htmlcov/
+
+# =============================================================================
+# 构建产物
+# =============================================================================
+build/
+dist/
+out/
+target/
+
+# =============================================================================
+# 文档生成
+# =============================================================================
+docs/_build/
+docs/build/
+
+# =============================================================================
+# 模型和大文件
+# =============================================================================
 models/
 *.model
 *.bin
 *.safetensors
-# Vector embeddings cache
-embeddings/
-# OCR temporary files
-ocr_temp/
+*.onnx
+*.pkl
+*.joblib
 
-.trae/
-__pycache__/
+# =============================================================================
+# 用户上传的文件
+# =============================================================================
+uploads/
+user-data/
+documents/

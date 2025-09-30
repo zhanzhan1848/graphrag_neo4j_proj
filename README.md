@@ -28,7 +28,7 @@ GraphRAG 是一个先进的知识图谱系统，专为构建智能化的文档�
 - **语义检索**: 基于向量嵌入的智能检索和问答
 - **图谱可视化**: 直观展示知识之间的复杂关系
 
-## ✨ 功能特性
+## ✨ 核心功能
 
 ### 📄 文档处理
 - **多格式支持**: PDF、TXT、Markdown、HTML、图片（OCR）
@@ -135,10 +135,88 @@ graph TB
 git clone https://github.com/your-org/GraphRAG_NEO_IMG.git
 cd GraphRAG_NEO_IMG
 
-# 2. 启动所有基础服务（PostgreSQL、Neo4j、Redis、MinIO、Weaviate、MinerU OCR、监控服务）
+# 2. 配置环境变量
+cp .env.example .env
+# 根据需要修改 .env 文件中的配置
+
+# 3. 启动基础服务
 docker-compose up -d
 
-# 3. 查看服务状态
+# 4. 验证服务状态
+./scripts/test-services.sh
+```
+
+### 服务访问地址
+
+启动成功后，可通过以下地址访问各个服务：
+
+- **Neo4j 图数据库**: http://localhost:7474 (neo4j/neo4j123)
+- **MinIO 对象存储**: http://localhost:9001 (minioadmin/minioadmin123)
+- **MinerU 文档解析**: http://localhost:8501
+- **Weaviate 向量数据库**: http://localhost:8080
+- **PostgreSQL**: localhost:5432 (graphrag/graphrag123)
+- **Redis**: localhost:6379 (密码: redis123)
+
+## 🏗️ 系统架构
+
+### 技术栈
+- **图数据库**: Neo4j - 存储实体关系图
+- **关系数据库**: PostgreSQL - 文档元数据存储
+- **向量数据库**: Weaviate - 语义检索支持
+- **缓存**: Redis - 查询缓存和会话管理
+- **对象存储**: MinIO - 文档和媒体文件存储
+- **文档解析**: MinerU - PDF/OCR 处理
+- **后端框架**: FastAPI - API 服务
+- **前端**: React + TypeScript - 用户界面
+
+### 数据流程
+```
+文档上传 → MinerU解析 → 文本分块 → 向量化 → 实体抽取 → 关系识别 → 图存储 → 检索查询
+    ↓         ↓         ↓        ↓       ↓       ↓       ↓       ↓
+  MinIO   PostgreSQL  Weaviate  Neo4j   Redis   API    前端    用户
+```
+
+## 📁 项目结构
+
+```
+GraphRAG_NEO_IMG/
+├── docker-compose.yml          # Docker 服务编排
+├── .env.example               # 环境变量模板
+├── scripts/                   # 工具脚本
+│   ├── test-services.sh      # 服务健康检查（Shell）
+│   ├── test-services.py      # 服务健康检查（Python）
+│   └── requirements.txt      # Python 依赖
+├── docs/                     # 项目文档
+│   ├── deployment/           # 部署文档
+│   ├── api/                 # API 文档
+│   ├── architecture/        # 架构设计
+│   └── user-guide/          # 用户指南
+├── src/                     # 源代码（待开发）
+│   ├── backend/            # 后端服务
+│   ├── frontend/           # 前端应用
+│   └── shared/             # 共享组件
+└── tests/                  # 测试代码
+```
+
+## 🔧 开发指南
+
+### 本地开发环境
+
+```bash
+# 安装 Python 依赖（用于测试脚本）
+pip install -r scripts/requirements.txt
+
+# 启动开发环境
+docker-compose up -d
+
+# 运行健康检查
+python scripts/test-services.py
+```
+
+### 服务管理
+
+```bash
+# 查看服务状态
 docker-compose ps
 
 # 4. 查看日志
@@ -168,131 +246,79 @@ docker-compose logs -f
 ### 基本使用
 
 ```bash
-# 上传文档（PDF/TXT/Markdown）
-curl -X POST "http://localhost:8000/api/documents/upload" \
-     -H "Content-Type: multipart/form-data" \
-     -F "file=@your-document.pdf"
+# PostgreSQL 备份
+docker-compose exec postgres pg_dump -U graphrag graphrag > backup.sql
 
-# 上传图片文档（使用 OCR）
-curl -X POST "http://localhost:8000/api/documents/upload" \
-     -H "Content-Type: multipart/form-data" \
-     -F "file=@your-image.png" \
-     -F "use_ocr=true"
-
-# 查询知识
-curl -X POST "http://localhost:8000/api/query" \
-     -H "Content-Type: application/json" \
-     -d '{"query": "什么是人工智能？", "limit": 5}'
-
-# 浏览实体
-curl "http://localhost:8000/api/graph/entities?limit=10"
-
-# 检查 OCR 服务状态
-curl "http://localhost:8000/api/ocr/status"
+# Neo4j 备份
+docker-compose exec neo4j neo4j-admin dump --database=graphrag --to=/backup/neo4j.dump
 ```
 
-> **OCR 功能**: 支持 MinerU OCR 服务，可处理图片格式文档（PNG、JPG、JPEG），支持远程和本地部署模式
+## 🔒 安全配置
 
-## 📚 文档
+### 生产环境建议
+1. **修改默认密码**: 更新 `.env` 文件中的所有密码
+2. **网络隔离**: 配置防火墙和网络访问控制
+3. **SSL/TLS**: 启用 HTTPS 和数据库 SSL 连接
+4. **访问控制**: 实施用户认证和权限管理
 
-完整的文档体系位于 `docs/` 目录，包含：
+## 📚 文档导航
 
-### 📖 用户文档
-- **[快速开始指南](docs/quick-start/README.md)** - 系统安装和基本使用
-- **[用户指南](docs/user-guide/README.md)** - 详细功能说明和最佳实践
-- **[API 文档](docs/api/README.md)** - RESTful API 接口说明
+- **[部署指南](docs/deployment/docker-setup.md)** - 详细的 Docker 部署说明
+- **[API 文档](docs/api/README.md)** - REST API 接口说明
+- **[架构设计](docs/architecture/system-overview.md)** - 系统架构详解
+- **[开发指南](docs/development/README.md)** - 开发环境配置
+- **[故障排除](docs/troubleshooting/README.md)** - 常见问题解决
 
-### 🔧 开发文档
-- **[开发者指南](docs/development/README.md)** - 开发环境搭建和代码规范
-- **[系统架构](docs/architecture/README.md)** - 架构设计和技术选型
-- **[数据库设计](docs/database/README.md)** - 数据模型和存储方案
+## 🚧 开发路线图
 
-### 🚀 运维文档
-- **[部署指南](docs/deployment/README.md)** - 生产环境部署配置
-- **[监控指南](docs/monitoring/README.md)** - 系统监控和告警设置
-- **[安全指南](docs/security/README.md)** - 安全配置和最佳实践
+### Phase 0: 基础设施 ✅
+- [x] Docker Compose 配置
+- [x] 基础服务部署
+- [x] 健康检查脚本
+- [x] 部署文档
 
-## 🛣️ 开发路线图
+### Phase 1: 核心服务 🚧
+- [ ] FastAPI 后端框架
+- [ ] 文档上传 API
+- [ ] 文本处理服务
+- [ ] 数据库模型设计
 
-项目采用分阶段开发模式：
+### Phase 2: 知识抽取 📋
+- [ ] 实体识别服务
+- [ ] 关系抽取算法
+- [ ] 向量化处理
+- [ ] 图数据存储
 
-### 🎯 阶段 0 - 基础架构 ✅
-- [x] Docker 容器化环境
-- [x] 基础 API 框架
-- [x] 数据库连接和配置
-- [x] 基本的文档上传功能
+### Phase 3: 检索和问答 📋
+- [ ] 语义检索 API
+- [ ] RAG 问答系统
+- [ ] 图查询接口
+- [ ] 结果排序优化
 
-### 🎯 阶段 1 - MVP 功能 🚧
-- [x] 文档解析和分块
-- [x] 实体和关系抽取
-- [x] 知识图谱构建
-- [ ] 基础检索和问答
+### Phase 4: 用户界面 📋
+- [ ] React 前端应用
+- [ ] 文档管理界面
+- [ ] 知识图谱可视化
+- [ ] 问答交互界面
 
-### 🎯 阶段 2 - 多模态扩展 📋
-- [ ] 图像 OCR 处理
-- [ ] 多模态向量检索
-- [ ] 图文混合问答
-- [ ] 高级可视化
+## 🤝 贡献指南
 
-### 🎯 阶段 3 - 企业级部署 📋
-- [ ] Kubernetes 部署
-- [ ] 高可用配置
-- [ ] 性能优化
-- [ ] 企业级安全
-
-## 🤝 贡献
-
-我们欢迎社区贡献！请遵循以下指南：
-
-### 贡献流程
-
-1. **Fork** 项目到你的 GitHub 账户
-2. **创建** 功能分支 (`git checkout -b feature/AmazingFeature`)
-3. **提交** 你的更改 (`git commit -m 'Add some AmazingFeature'`)
-4. **推送** 到分支 (`git push origin feature/AmazingFeature`)
-5. **创建** Pull Request
-
-### 开发规范
-
-- **代码风格**: 遵循 PEP 8 (Python) 和 ESLint (TypeScript)
-- **提交信息**: 使用 [Conventional Commits](https://www.conventionalcommits.org/) 格式
-- **测试覆盖**: 新功能需要包含相应的测试用例
-- **文档更新**: 重要更改需要同步更新文档
-
-### 问题报告
-
-如果你发现了 bug 或有功能建议，请：
-
-1. 查看 [现有 Issues](https://github.com/your-org/GraphRAG_NEO_IMG/issues)
-2. 如果没有相关问题，[创建新 Issue](https://github.com/your-org/GraphRAG_NEO_IMG/issues/new)
-3. 提供详细的问题描述和复现步骤
+1. Fork 项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
 
 ## 📄 许可证
 
-本项目采用 [MIT 许可证](LICENSE)。
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
-## 🙏 致谢
+## 📞 支持
 
-感谢以下开源项目和社区的支持：
-
-- [FastAPI](https://fastapi.tiangolo.com/) - 现代化的 Python Web 框架
-- [Neo4j](https://neo4j.com/) - 领先的图数据库
-- [Weaviate](https://weaviate.io/) - 向量数据库和搜索引擎
-- [React](https://reactjs.org/) - 用户界面构建库
-
-## 📞 联系我们
-
-- **项目主页**: https://github.com/your-org/GraphRAG_NEO_IMG
-- **问题反馈**: https://github.com/your-org/GraphRAG_NEO_IMG/issues
-- **讨论区**: https://github.com/your-org/GraphRAG_NEO_IMG/discussions
-- **邮箱**: support@graphrag.com
+- **问题反馈**: [GitHub Issues](https://github.com/your-repo/issues)
+- **功能建议**: [GitHub Discussions](https://github.com/your-repo/discussions)
+- **文档问题**: 查看 [docs/](docs/) 目录或提交 Issue
 
 ---
 
-<div align="center">
-
-**如果这个项目对你有帮助，请给我们一个 ⭐️**
-
-Made with ❤️ by the GraphRAG Team
-
-</div>
+**注意**: 本项目目前处于开发阶段，部分功能可能尚未完全实现。请参考开发路线图了解最新进展。
