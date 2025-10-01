@@ -140,6 +140,94 @@ services:
       timeout: 5s
       retries: 5
 
+  # GraphRAG API 服务 - 主要的 FastAPI 应用
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: graphrag_api
+    restart: unless-stopped
+    environment:
+      # 应用配置
+      APP_NAME: "GraphRAG Knowledge Base API"
+      APP_VERSION: "1.0.0"
+      APP_DESCRIPTION: "GraphRAG 知识库系统 API 服务"
+      DEBUG: ${DEBUG:-true}
+      
+      # 服务器配置
+      HOST: "0.0.0.0"
+      PORT: 8000
+      WORKERS: ${API_WORKERS:-1}
+      
+      # 数据库连接配置
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-graphrag}
+      POSTGRES_USER: ${POSTGRES_USER:-graphrag}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-graphrag123}
+      
+      # Neo4j 配置
+      NEO4J_HOST: neo4j
+      NEO4J_PORT: 7688
+      NEO4J_USER: ${NEO4J_USER:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-neo4j123}
+      NEO4J_DATABASE: ${NEO4J_DATABASE:-graphrag}
+      
+      # Redis 配置
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
+      REDIS_DB: 0
+      
+      # Weaviate 配置
+      WEAVIATE_HOST: weaviate
+      WEAVIATE_PORT: 8080
+      WEAVIATE_SCHEME: http
+      
+      # MinIO 配置
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MINIO_SECURE: "false"
+      MINIO_BUCKET: ${MINIO_BUCKET:-graphrag}
+      
+      # 日志配置
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-structured}
+      LOG_FILE_ENABLED: "true"
+      LOG_FILE_PATH: "/app/logs/app.log"
+      
+      # 安全配置
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      
+    ports:
+      - "8000:8000"  # API 服务端口
+    volumes:
+      - api_logs:/app/logs
+      - api_data:/app/data
+      - api_uploads:/app/uploads
+      - ./app:/app/app:ro  # 开发时代码热重载（生产环境可移除）
+    networks:
+      - graphrag_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      weaviate:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   # MinerU 文档解析服务 - 用于 PDF 和文档处理
   # mineru:
   #   image: opendatalab/mineru:latest
@@ -180,6 +268,12 @@ volumes:
   minio_data:
     driver: local
   weaviate_data:
+    driver: local
+  api_logs:
+    driver: local
+  api_data:
+    driver: local
+  api_uploads:
     driver: local
   # mineru_data:
   #   driver: local
