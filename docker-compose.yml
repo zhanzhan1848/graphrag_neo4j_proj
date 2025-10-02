@@ -6,9 +6,9 @@
 version: '3.8'
 
 services:
-  # PostgreSQL 数据库 - 用于存储文档元数据和文本块
+  # PostgreSQL 数据库 - 用于存储文档元数据和文本块（包含 pgvector 扩展）
   postgres:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     container_name: graphrag_postgres
     restart: unless-stopped
     environment:
