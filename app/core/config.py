@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     
     # ==================== 基础应用配置 ====================
     APP_NAME: str = Field(default="GraphRAG Knowledge Base API", description="应用名称")
+    APP_ENV: str = Field(default="development", description="应用环境")
+    APP_VERSION: str = Field(default="1.0.0", description="应用版本")
+    APP_DESCRIPTION: str = Field(
+        default="GraphRAG 知识库系统 - 基于图数据库和向量检索的智能知识管理平台",
+        description="应用描述"
+    )
     VERSION: str = Field(default="1.0.0", description="应用版本")
     DESCRIPTION: str = Field(
         default="GraphRAG 知识库系统 - 基于图数据库和向量检索的智能知识管理平台",
@@ -46,7 +52,9 @@ class Settings(BaseSettings):
     # ==================== 服务器配置 ====================
     HOST: str = Field(default="0.0.0.0", description="服务器监听地址")
     PORT: int = Field(default=8000, description="服务器监听端口")
+    API_PORT: int = Field(default=8000, description="API 服务端口")
     WORKERS: int = Field(default=1, description="工作进程数量")
+    API_WORKERS: int = Field(default=1, description="API 工作进程数量")
     
     # ==================== API 配置 ====================
     API_V1_STR: str = Field(default="/api/v1", description="API v1 路径前缀")
@@ -60,6 +68,11 @@ class Settings(BaseSettings):
         default="your-secret-key-change-in-production",
         description="应用密钥，生产环境必须修改"
     )
+    JWT_SECRET_KEY: str = Field(
+        default="your-super-secret-jwt-key-change-this-in-production",
+        description="JWT 密钥，生产环境必须修改"
+    )
+    ALGORITHM: str = Field(default="HS256", description="JWT 算法")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, description="访问令牌过期时间（分钟）")
     
     # ==================== 数据库配置 ====================
@@ -73,6 +86,8 @@ class Settings(BaseSettings):
     # Neo4j 配置
     NEO4J_HOST: str = Field(default="localhost", description="Neo4j 主机地址")
     NEO4J_PORT: int = Field(default=7688, description="Neo4j Bolt 端口")
+    NEO4J_HTTP_PORT: str = Field(default="7475", description="Neo4j HTTP 端口")
+    NEO4J_BOLT_PORT: str = Field(default="7688", description="Neo4j Bolt 端口")
     NEO4J_USER: str = Field(default="neo4j", description="Neo4j 用户名")
     NEO4J_PASSWORD: str = Field(default="neo4j123", description="Neo4j 密码")
     NEO4J_DATABASE: str = Field(default="graphrag", description="Neo4j 数据库名")
@@ -86,11 +101,16 @@ class Settings(BaseSettings):
     # Weaviate 配置
     WEAVIATE_HOST: str = Field(default="localhost", description="Weaviate 主机地址")
     WEAVIATE_PORT: int = Field(default=8080, description="Weaviate 端口")
+    WEAVIATE_SCHEME: str = Field(default="http", description="Weaviate 协议")
     WEAVIATE_GRPC_PORT: int = Field(default=50051, description="Weaviate gRPC 端口")
     
     # MinIO 配置
     MINIO_HOST: str = Field(default="localhost", description="MinIO 主机地址")
     MINIO_PORT: int = Field(default=9000, description="MinIO 端口")
+    MINIO_ROOT_USER: str = Field(default="minioadmin", description="MinIO 根用户")
+    MINIO_ROOT_PASSWORD: str = Field(default="minioadmin123", description="MinIO 根密码")
+    MINIO_CONSOLE_PORT: str = Field(default="9001", description="MinIO 控制台端口")
+    MINIO_BUCKET_NAME: str = Field(default="graphrag-documents", description="MinIO 存储桶名称")
     MINIO_ACCESS_KEY: str = Field(default="minioadmin", description="MinIO 访问密钥")
     MINIO_SECRET_KEY: str = Field(default="minioadmin123", description="MinIO 秘密密钥")
     MINIO_BUCKET: str = Field(default="graphrag", description="MinIO 存储桶名称")
@@ -101,6 +121,7 @@ class Settings(BaseSettings):
         default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         description="日志格式"
     )
+    LOG_FILE_ENABLED: str = Field(default="true", description="是否启用日志文件")
     LOG_FILE_PATH: str = Field(default="/app/logs/app.log", description="日志文件路径")
     LOG_MAX_SIZE: int = Field(default=10 * 1024 * 1024, description="单个日志文件最大大小（字节）")
     LOG_BACKUP_COUNT: int = Field(default=5, description="日志文件备份数量")
@@ -108,6 +129,8 @@ class Settings(BaseSettings):
     
     # ==================== 文件处理配置 ====================
     UPLOAD_MAX_SIZE: int = Field(default=100 * 1024 * 1024, description="上传文件最大大小（字节）")
+    MAX_FILE_SIZE: str = Field(default="100", description="最大文件大小（MB）")
+    SUPPORTED_FILE_TYPES: str = Field(default="pdf,txt,md,html,docx", description="支持的文件类型")
     ALLOWED_FILE_TYPES: List[str] = Field(
         default=[".pdf", ".txt", ".md", ".docx", ".html", ".json"],
         description="允许上传的文件类型"
@@ -119,13 +142,50 @@ class Settings(BaseSettings):
     CHUNK_OVERLAP: int = Field(default=200, description="文本分块重叠大小")
     MAX_CONCURRENT_TASKS: int = Field(default=5, description="最大并发任务数")
     
-    # ==================== 外部服务配置 ====================
-    # LLM 服务配置
+    # ==================== LLM 和嵌入服务配置 ====================
+    # OpenAI API 配置
+    OPENAI_API_KEY: str = Field(default="your-openai-api-key", description="OpenAI API 密钥")
+    OPENAI_MODEL: str = Field(default="gpt-3.5-turbo", description="OpenAI 模型名称")
+    
+    # Hugging Face 配置
+    HUGGINGFACE_API_KEY: str = Field(default="your-huggingface-api-key", description="Hugging Face API 密钥")
+    
+    # 本地模型配置
+    LOCAL_MODEL_PATH: str = Field(default="/app/models", description="本地模型路径")
+    
+    # MinerU 配置
+    MINERU_HOST: str = Field(default="localhost", description="MinerU 主机地址")
+    MINERU_PORT: str = Field(default="8501", description="MinerU 端口")
+    
+    # 监控配置
+    HEALTH_CHECK_INTERVAL: str = Field(default="30", description="健康检查间隔（秒）")
+    SERVICE_TIMEOUT: str = Field(default="60", description="服务超时时间（秒）")
+    
+    # Azure OpenAI 配置
+    AZURE_OPENAI_ENDPOINT: Optional[str] = Field(default=None, description="Azure OpenAI 服务端点")
+    AZURE_OPENAI_API_KEY: Optional[str] = Field(default=None, description="Azure OpenAI API 密钥")
+    AZURE_OPENAI_API_VERSION: str = Field(default="2024-02-15-preview", description="Azure OpenAI API 版本")
+    
+    # LLM 模型配置
+    AZURE_OPENAI_LLM_MODEL: str = Field(default="gpt-4-turbo", description="Azure OpenAI LLM 模型名称")
+    AZURE_OPENAI_LLM_DEPLOYMENT_NAME: str = Field(default="gpt-4-turbo", description="Azure OpenAI LLM 部署名称")
+    
+    # 嵌入模型配置
+    AZURE_OPENAI_EMBEDDING_MODEL: str = Field(default="text-embedding-ada-002", description="Azure OpenAI 嵌入模型名称")
+    AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME: str = Field(default="text-embedding-ada-002", description="Azure OpenAI 嵌入部署名称")
+    
+    # GraphRAG 特定配置
+    GRAPHRAG_LLM_MAX_TOKENS: int = Field(default=4000, description="GraphRAG LLM 最大令牌数")
+    GRAPHRAG_LLM_TEMPERATURE: float = Field(default=0.1, description="GraphRAG LLM 温度参数")
+    GRAPHRAG_CHUNK_SIZE: int = Field(default=1200, description="GraphRAG 文本分块大小")
+    GRAPHRAG_CHUNK_OVERLAP: int = Field(default=100, description="GraphRAG 文本分块重叠大小")
+    
+    # 兼容性配置（保留原有配置）
     LLM_API_BASE: Optional[str] = Field(default=None, description="LLM API 基础地址")
     LLM_API_KEY: Optional[str] = Field(default=None, description="LLM API 密钥")
     LLM_MODEL: str = Field(default="gpt-3.5-turbo", description="LLM 模型名称")
     
-    # 嵌入服务配置
+    # ==================== 嵌入服务配置 ====================
     EMBEDDING_API_BASE: Optional[str] = Field(default=None, description="嵌入服务 API 基础地址")
     EMBEDDING_API_KEY: Optional[str] = Field(default=None, description="嵌入服务 API 密钥")
     EMBEDDING_MODEL: str = Field(default="text-embedding-ada-002", description="嵌入模型名称")

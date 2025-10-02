@@ -35,6 +35,8 @@ RUN useradd --create-home --shell /bin/bash appuser
 RUN mkdir -p /app/logs /app/data /app/uploads && \
     chown -R appuser:appuser /app
 
+COPY .env.example .env
+
 # 切换到非 root 用户
 USER appuser
 
