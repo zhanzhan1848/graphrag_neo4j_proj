@@ -1,0 +1,230 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "description": "PostgreSQL数据库表结构和向量存储配置",
+    "created_at": "2024-01-01",
+    "updated_at": "2024-01-01",
+    "required_extensions": ["pgvector", "uuid-ossp", "pg_trgm"]
+  },
+  "database_setup": {
+    "extensions": {
+      "description": "必需的PostgreSQL扩展",
+      "sql": [
+        "CREATE EXTENSION IF NOT EXISTS vector;",
+        "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";",
+        "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+      ]
+    },
+    "custom_types": {
+      "document_type_enum": {
+        "description": "文档类型枚举",
+        "sql": "CREATE TYPE document_type AS ENUM ('paper', 'book', 'thesis', 'report', 'article', 'conference_paper', 'journal_article', 'review', 'preprint');"
+      },
+      "processing_status_enum": {
+        "description": "处理状态枚举", 
+        "sql": "CREATE TYPE processing_status AS ENUM ('pending', 'processing', 'completed', 'failed', 'cancelled');"
+      },
+      "embedding_model_enum": {
+        "description": "嵌入模型枚举",
+        "sql": "CREATE TYPE embedding_model AS ENUM ('text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'sentence-transformers', 'custom');"
+      }
+    }
+  },
+  "tables": {
+    "documents": {
+      "description": "文档基本信息表",
+      "create_sql": "CREATE TABLE documents (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    title TEXT NOT NULL,\n    authors TEXT[],\n    year INTEGER,\n    venue TEXT,\n    doi TEXT,\n    url TEXT,\n    abstract TEXT,\n    keywords TEXT[],\n    language VARCHAR(10) DEFAULT 'en',\n    document_type document_type NOT NULL,\n    file_path TEXT,\n    file_size BIGINT,\n    file_hash VARCHAR(64),\n    processing_status processing_status DEFAULT 'pending',\n    neo4j_node_id VARCHAR(100),\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    processed_at TIMESTAMP WITH TIME ZONE\n);",
+      "indexes": [
+        "CREATE INDEX idx_documents_title_gin ON documents USING gin(to_tsvector('english', title));",
+        "CREATE INDEX idx_documents_abstract_gin ON documents USING gin(to_tsvector('english', abstract));",
+        "CREATE INDEX idx_documents_keywords_gin ON documents USING gin(keywords);",
+        "CREATE INDEX idx_documents_year ON documents(year);",
+        "CREATE INDEX idx_documents_type ON documents(document_type);",
+        "CREATE INDEX idx_documents_status ON documents(processing_status);",
+        "CREATE INDEX idx_documents_neo4j_id ON documents(neo4j_node_id);",
+        "CREATE UNIQUE INDEX idx_documents_file_hash ON documents(file_hash) WHERE file_hash IS NOT NULL;"
+      ],
+      "triggers": [
+        "CREATE OR REPLACE FUNCTION update_updated_at_column() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = NOW(); RETURN NEW; END; $$ language 'plpgsql';",
+        "CREATE TRIGGER update_documents_updated_at BEFORE UPDATE ON documents FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();"
+      ]
+    },
+    "document_segments": {
+      "description": "文档分段表",
+      "create_sql": "CREATE TABLE document_segments (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,\n    text TEXT NOT NULL,\n    start_char INTEGER,\n    end_char INTEGER,\n    page_number INTEGER,\n    section_title TEXT,\n    section_type VARCHAR(50),\n    word_count INTEGER,\n    char_count INTEGER,\n    language VARCHAR(10) DEFAULT 'en',\n    neo4j_node_id VARCHAR(100),\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+      "indexes": [
+        "CREATE INDEX idx_segments_document_id ON document_segments(document_id);",
+        "CREATE INDEX idx_segments_text_gin ON document_segments USING gin(to_tsvector('english', text));",
+        "CREATE INDEX idx_segments_page ON document_segments(page_number);",
+        "CREATE INDEX idx_segments_section_type ON document_segments(section_type);",
+        "CREATE INDEX idx_segments_neo4j_id ON document_segments(neo4j_node_id);"
+      ]
+    },
+    "embeddings": {
+      "description": "向量嵌入表",
+      "create_sql": "CREATE TABLE embeddings (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    content_id UUID NOT NULL,\n    content_type VARCHAR(50) NOT NULL,\n    embedding vector(1536),\n    model_name embedding_model NOT NULL,\n    model_version VARCHAR(50),\n    embedding_dimension INTEGER NOT NULL DEFAULT 1536,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    CONSTRAINT chk_content_type CHECK (content_type IN ('document', 'segment', 'concept', 'query'))\n);",
+      "indexes": [
+        "CREATE INDEX idx_embeddings_content ON embeddings(content_id, content_type);",
+        "CREATE INDEX idx_embeddings_model ON embeddings(model_name);",
+        "CREATE INDEX idx_embeddings_vector_cosine ON embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);",
+        "CREATE INDEX idx_embeddings_vector_l2 ON embeddings USING ivfflat (embedding vector_l2_ops) WITH (lists = 100);"
+      ]
+    },
+    "concepts": {
+      "description": "概念表（与Neo4j同步）",
+      "create_sql": "CREATE TABLE concepts (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    neo4j_node_id VARCHAR(100) UNIQUE NOT NULL,\n    preferred_label TEXT NOT NULL,\n    alt_labels TEXT[],\n    description TEXT,\n    discipline VARCHAR(100),\n    subfield VARCHAR(100),\n    canonical BOOLEAN DEFAULT true,\n    confidence FLOAT DEFAULT 1.0,\n    source VARCHAR(100),\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+      "indexes": [
+        "CREATE INDEX idx_concepts_preferred_label_gin ON concepts USING gin(to_tsvector('english', preferred_label));",
+        "CREATE INDEX idx_concepts_alt_labels_gin ON concepts USING gin(alt_labels);",
+        "CREATE INDEX idx_concepts_discipline ON concepts(discipline);",
+        "CREATE INDEX idx_concepts_subfield ON concepts(subfield);",
+        "CREATE INDEX idx_concepts_canonical ON concepts(canonical);",
+        "CREATE INDEX idx_concepts_neo4j_id ON concepts(neo4j_node_id);"
+      ],
+      "triggers": [
+        "CREATE TRIGGER update_concepts_updated_at BEFORE UPDATE ON concepts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();"
+      ]
+    },
+    "concept_mentions": {
+      "description": "概念提及表",
+      "create_sql": "CREATE TABLE concept_mentions (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    segment_id UUID NOT NULL REFERENCES document_segments(id) ON DELETE CASCADE,\n    concept_id UUID NOT NULL REFERENCES concepts(id) ON DELETE CASCADE,\n    mention_text TEXT NOT NULL,\n    start_position INTEGER,\n    end_position INTEGER,\n    confidence FLOAT DEFAULT 1.0,\n    extraction_method VARCHAR(100),\n    context_window TEXT,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+      "indexes": [
+        "CREATE INDEX idx_mentions_segment_id ON concept_mentions(segment_id);",
+        "CREATE INDEX idx_mentions_concept_id ON concept_mentions(concept_id);",
+        "CREATE INDEX idx_mentions_confidence ON concept_mentions(confidence);",
+        "CREATE INDEX idx_mentions_method ON concept_mentions(extraction_method);",
+        "CREATE UNIQUE INDEX idx_mentions_unique ON concept_mentions(segment_id, concept_id, start_position);"
+      ]
+    },
+    "similarity_cache": {
+      "description": "相似度计算缓存表",
+      "create_sql": "CREATE TABLE similarity_cache (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    source_id UUID NOT NULL,\n    target_id UUID NOT NULL,\n    source_type VARCHAR(50) NOT NULL,\n    target_type VARCHAR(50) NOT NULL,\n    similarity_score FLOAT NOT NULL,\n    similarity_method VARCHAR(100) NOT NULL,\n    computed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    expires_at TIMESTAMP WITH TIME ZONE,\n    CONSTRAINT chk_similarity_score CHECK (similarity_score >= 0 AND similarity_score <= 1),\n    CONSTRAINT chk_similarity_types CHECK (source_type IN ('concept', 'document', 'segment') AND target_type IN ('concept', 'document', 'segment'))\n);",
+      "indexes": [
+        "CREATE INDEX idx_similarity_source ON similarity_cache(source_id, source_type);",
+        "CREATE INDEX idx_similarity_target ON similarity_cache(target_id, target_type);",
+        "CREATE INDEX idx_similarity_score ON similarity_cache(similarity_score DESC);",
+        "CREATE INDEX idx_similarity_method ON similarity_cache(similarity_method);",
+        "CREATE INDEX idx_similarity_expires ON similarity_cache(expires_at);",
+        "CREATE UNIQUE INDEX idx_similarity_unique ON similarity_cache(source_id, target_id, source_type, target_type, similarity_method);"
+      ]
+    },
+    "processing_jobs": {
+      "description": "处理任务表",
+      "create_sql": "CREATE TABLE processing_jobs (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    job_type VARCHAR(100) NOT NULL,\n    document_id UUID REFERENCES documents(id) ON DELETE CASCADE,\n    status processing_status DEFAULT 'pending',\n    priority INTEGER DEFAULT 5,\n    parameters JSONB,\n    result JSONB,\n    error_message TEXT,\n    started_at TIMESTAMP WITH TIME ZONE,\n    completed_at TIMESTAMP WITH TIME ZONE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+      "indexes": [
+        "CREATE INDEX idx_jobs_type ON processing_jobs(job_type);",
+        "CREATE INDEX idx_jobs_status ON processing_jobs(status);",
+        "CREATE INDEX idx_jobs_priority ON processing_jobs(priority DESC);",
+        "CREATE INDEX idx_jobs_document_id ON processing_jobs(document_id);",
+        "CREATE INDEX idx_jobs_created_at ON processing_jobs(created_at);"
+      ],
+      "triggers": [
+        "CREATE TRIGGER update_jobs_updated_at BEFORE UPDATE ON processing_jobs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();"
+      ]
+    },
+    "search_queries": {
+      "description": "搜索查询日志表",
+      "create_sql": "CREATE TABLE search_queries (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    query_text TEXT NOT NULL,\n    query_type VARCHAR(50) NOT NULL,\n    user_id VARCHAR(100),\n    session_id VARCHAR(100),\n    filters JSONB,\n    results_count INTEGER,\n    response_time_ms INTEGER,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    CONSTRAINT chk_query_type CHECK (query_type IN ('semantic', 'keyword', 'hybrid', 'graph'))\n);",
+      "indexes": [
+        "CREATE INDEX idx_queries_text_gin ON search_queries USING gin(to_tsvector('english', query_text));",
+        "CREATE INDEX idx_queries_type ON search_queries(query_type);",
+        "CREATE INDEX idx_queries_user_id ON search_queries(user_id);",
+        "CREATE INDEX idx_queries_session_id ON search_queries(session_id);",
+        "CREATE INDEX idx_queries_created_at ON search_queries(created_at);"
+      ]
+    }
+  },
+  "views": {
+    "document_stats": {
+      "description": "文档统计视图",
+      "create_sql": "CREATE VIEW document_stats AS\nSELECT \n    d.id,\n    d.title,\n    d.document_type,\n    d.year,\n    COUNT(ds.id) as segment_count,\n    COUNT(cm.id) as concept_mention_count,\n    COUNT(DISTINCT cm.concept_id) as unique_concept_count,\n    AVG(ds.word_count) as avg_segment_length,\n    d.processing_status,\n    d.created_at\nFROM documents d\nLEFT JOIN document_segments ds ON d.id = ds.document_id\nLEFT JOIN concept_mentions cm ON ds.id = cm.segment_id\nGROUP BY d.id, d.title, d.document_type, d.year, d.processing_status, d.created_at;"
+    },
+    "concept_popularity": {
+      "description": "概念流行度视图",
+      "create_sql": "CREATE VIEW concept_popularity AS\nSELECT \n    c.id,\n    c.preferred_label,\n    c.discipline,\n    c.subfield,\n    COUNT(cm.id) as mention_count,\n    COUNT(DISTINCT cm.segment_id) as segment_count,\n    COUNT(DISTINCT ds.document_id) as document_count,\n    AVG(cm.confidence) as avg_confidence,\n    MAX(d.year) as latest_year,\n    MIN(d.year) as earliest_year\nFROM concepts c\nLEFT JOIN concept_mentions cm ON c.id = cm.concept_id\nLEFT JOIN document_segments ds ON cm.segment_id = ds.id\nLEFT JOIN documents d ON ds.document_id = d.id\nGROUP BY c.id, c.preferred_label, c.discipline, c.subfield;"
+    }
+  },
+  "functions": {
+    "semantic_search": {
+      "description": "语义搜索函数",
+      "create_sql": "CREATE OR REPLACE FUNCTION semantic_search(\n    query_embedding vector(1536),\n    content_type_filter VARCHAR(50) DEFAULT NULL,\n    similarity_threshold FLOAT DEFAULT 0.7,\n    result_limit INTEGER DEFAULT 10\n)\nRETURNS TABLE (\n    content_id UUID,\n    content_type VARCHAR(50),\n    similarity_score FLOAT\n) AS $$\nBEGIN\n    RETURN QUERY\n    SELECT \n        e.content_id,\n        e.content_type,\n        1 - (e.embedding <=> query_embedding) as similarity_score\n    FROM embeddings e\n    WHERE \n        (content_type_filter IS NULL OR e.content_type = content_type_filter)\n        AND (1 - (e.embedding <=> query_embedding)) >= similarity_threshold\n    ORDER BY e.embedding <=> query_embedding\n    LIMIT result_limit;\nEND;\n$$ LANGUAGE plpgsql;"
+    },
+    "find_similar_concepts": {
+      "description": "查找相似概念函数",
+      "create_sql": "CREATE OR REPLACE FUNCTION find_similar_concepts(\n    concept_id_input UUID,\n    similarity_threshold FLOAT DEFAULT 0.8,\n    result_limit INTEGER DEFAULT 5\n)\nRETURNS TABLE (\n    similar_concept_id UUID,\n    preferred_label TEXT,\n    similarity_score FLOAT\n) AS $$\nBEGIN\n    RETURN QUERY\n    SELECT \n        c.id as similar_concept_id,\n        c.preferred_label,\n        1 - (e1.embedding <=> e2.embedding) as similarity_score\n    FROM concepts c\n    JOIN embeddings e1 ON c.id = e1.content_id AND e1.content_type = 'concept'\n    JOIN embeddings e2 ON e2.content_id = concept_id_input AND e2.content_type = 'concept'\n    WHERE \n        c.id != concept_id_input\n        AND (1 - (e1.embedding <=> e2.embedding)) >= similarity_threshold\n    ORDER BY e1.embedding <=> e2.embedding\n    LIMIT result_limit;\nEND;\n$$ LANGUAGE plpgsql;"
+    },
+    "update_similarity_cache": {
+      "description": "更新相似度缓存函数",
+      "create_sql": "CREATE OR REPLACE FUNCTION update_similarity_cache(\n    source_id_input UUID,\n    target_id_input UUID,\n    source_type_input VARCHAR(50),\n    target_type_input VARCHAR(50),\n    similarity_score_input FLOAT,\n    similarity_method_input VARCHAR(100),\n    cache_duration_hours INTEGER DEFAULT 24\n)\nRETURNS VOID AS $$\nBEGIN\n    INSERT INTO similarity_cache (\n        source_id, target_id, source_type, target_type,\n        similarity_score, similarity_method, expires_at\n    )\n    VALUES (\n        source_id_input, target_id_input, source_type_input, target_type_input,\n        similarity_score_input, similarity_method_input,\n        NOW() + INTERVAL '1 hour' * cache_duration_hours\n    )\n    ON CONFLICT (source_id, target_id, source_type, target_type, similarity_method)\n    DO UPDATE SET\n        similarity_score = EXCLUDED.similarity_score,\n        computed_at = NOW(),\n        expires_at = EXCLUDED.expires_at;\nEND;\n$$ LANGUAGE plpgsql;"
+    }
+  },
+  "maintenance": {
+    "cleanup_expired_cache": {
+      "description": "清理过期缓存",
+      "sql": "DELETE FROM similarity_cache WHERE expires_at < NOW();"
+    },
+    "recompute_embeddings_stats": {
+      "description": "重新计算嵌入统计信息",
+      "sql": "ANALYZE embeddings;"
+    },
+    "vacuum_tables": {
+      "description": "清理表空间",
+      "sql": [
+        "VACUUM ANALYZE documents;",
+        "VACUUM ANALYZE document_segments;", 
+        "VACUUM ANALYZE embeddings;",
+        "VACUUM ANALYZE concepts;",
+        "VACUUM ANALYZE concept_mentions;",
+        "VACUUM ANALYZE similarity_cache;"
+      ]
+    }
+  },
+  "configuration": {
+    "embedding_settings": {
+      "default_model": "text-embedding-3-small",
+      "default_dimension": 1536,
+      "batch_size": 100,
+      "similarity_threshold": 0.7,
+      "cache_duration_hours": 24
+    },
+    "search_settings": {
+      "default_limit": 10,
+      "max_limit": 100,
+      "semantic_weight": 0.7,
+      "keyword_weight": 0.3
+    },
+    "processing_settings": {
+      "max_segment_length": 1000,
+      "min_segment_length": 50,
+      "overlap_size": 100,
+      "max_concurrent_jobs": 5
+    }
+  },
+  "sample_queries": {
+    "insert_document": {
+      "description": "插入新文档",
+      "sql": "INSERT INTO documents (title, authors, year, venue, document_type, abstract, keywords) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id;",
+      "parameters": ["title", "authors[]", "year", "venue", "document_type", "abstract", "keywords[]"]
+    },
+    "insert_embedding": {
+      "description": "插入向量嵌入",
+      "sql": "INSERT INTO embeddings (content_id, content_type, embedding, model_name, embedding_dimension) VALUES ($1, $2, $3, $4, $5);",
+      "parameters": ["content_id", "content_type", "embedding_vector", "model_name", "dimension"]
+    },
+    "search_by_embedding": {
+      "description": "基于向量的语义搜索",
+      "sql": "SELECT content_id, content_type, 1 - (embedding <=> $1) as similarity FROM embeddings WHERE content_type = $2 ORDER BY embedding <=> $1 LIMIT $3;",
+      "parameters": ["query_embedding", "content_type", "limit"]
+    },
+    "find_document_concepts": {
+      "description": "查找文档中的概念",
+      "sql": "SELECT DISTINCT c.preferred_label, c.discipline, cm.confidence FROM concepts c JOIN concept_mentions cm ON c.id = cm.concept_id JOIN document_segments ds ON cm.segment_id = ds.id WHERE ds.document_id = $1 ORDER BY cm.confidence DESC;",
+      "parameters": ["document_id"]
+    },
+    "concept_co_occurrence": {
+      "description": "概念共现分析",
+      "sql": "SELECT c1.preferred_label as concept1, c2.preferred_label as concept2, COUNT(*) as co_occurrence_count FROM concept_mentions cm1 JOIN concept_mentions cm2 ON cm1.segment_id = cm2.segment_id AND cm1.concept_id < cm2.concept_id JOIN concepts c1 ON cm1.concept_id = c1.id JOIN concepts c2 ON cm2.concept_id = c2.id GROUP BY c1.id, c2.id, c1.preferred_label, c2.preferred_label HAVING COUNT(*) >= $1 ORDER BY co_occurrence_count DESC;",
+      "parameters": ["min_co_occurrence"]
+    }
+  }
+}

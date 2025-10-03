@@ -1,0 +1,321 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "description": "多学科知识库系统配置文件",
+    "created_at": "2024-01-01",
+    "updated_at": "2024-01-01"
+  },
+  "database": {
+    "neo4j": {
+      "uri": "bolt://localhost:7687",
+      "username": "neo4j",
+      "password": "password",
+      "database": "neo4j",
+      "connection_pool_size": 50,
+      "connection_timeout": 30,
+      "max_retry_attempts": 3,
+      "retry_delay": 1
+    },
+    "postgresql": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "knowledge_base",
+      "username": "postgres",
+      "password": "password",
+      "pool_size": 20,
+      "max_overflow": 30,
+      "pool_timeout": 30,
+      "pool_recycle": 3600,
+      "echo": false
+    }
+  },
+  "llm": {
+    "azure_openai": {
+      "api_key": "${AZURE_OPENAI_API_KEY}",
+      "endpoint": "${AZURE_OPENAI_ENDPOINT}",
+      "api_version": "2024-02-01",
+      "deployment_name": "gpt-4",
+      "embedding_deployment": "text-embedding-3-small",
+      "max_tokens": 4000,
+      "temperature": 0.1,
+      "timeout": 60,
+      "max_retries": 3
+    },
+    "openai": {
+      "api_key": "${OPENAI_API_KEY}",
+      "model": "gpt-4-turbo-preview",
+      "embedding_model": "text-embedding-3-small",
+      "max_tokens": 4000,
+      "temperature": 0.1,
+      "timeout": 60,
+      "max_retries": 3
+    }
+  },
+  "processing": {
+    "document_processing": {
+      "max_file_size_mb": 100,
+      "supported_formats": ["pdf", "txt", "md", "html", "docx"],
+      "chunk_size": 1000,
+      "chunk_overlap": 100,
+      "min_chunk_size": 50,
+      "max_chunks_per_document": 1000
+    },
+    "text_extraction": {
+      "pdf_engine": "pymupdf",
+      "ocr_engine": "tesseract",
+      "ocr_languages": ["eng", "chi_sim"],
+      "image_preprocessing": true,
+      "preserve_layout": true
+    },
+    "entity_extraction": {
+      "batch_size": 10,
+      "confidence_threshold": 0.7,
+      "max_entities_per_chunk": 50,
+      "enable_coreference_resolution": true,
+      "custom_ner_models": []
+    },
+    "relationship_extraction": {
+      "batch_size": 5,
+      "confidence_threshold": 0.8,
+      "max_relationships_per_chunk": 20,
+      "enable_cross_sentence": true,
+      "relation_types": [
+        "IS_A", "PART_OF", "USES", "ENABLES", "IMPROVES", 
+        "EXTENDS", "APPLIES_TO", "CONTRADICTS", "SUPPORTS", "RELATED_TO"
+      ]
+    },
+    "concept_canonicalization": {
+      "similarity_threshold": 0.85,
+      "embedding_similarity_weight": 0.6,
+      "string_similarity_weight": 0.3,
+      "context_similarity_weight": 0.1,
+      "auto_merge_threshold": 0.95,
+      "manual_review_threshold": 0.8
+    }
+  },
+  "embedding": {
+    "model_config": {
+      "default_model": "text-embedding-3-small",
+      "dimension": 1536,
+      "batch_size": 100,
+      "max_input_length": 8000
+    },
+    "vector_store": {
+      "similarity_metric": "cosine",
+      "index_type": "ivfflat",
+      "index_lists": 100,
+      "ef_construction": 200,
+      "ef_search": 100
+    },
+    "caching": {
+      "enable_cache": true,
+      "cache_ttl_hours": 24,
+      "max_cache_size": 10000
+    }
+  },
+  "api": {
+    "server": {
+      "host": "0.0.0.0",
+      "port": 8000,
+      "workers": 4,
+      "timeout": 300,
+      "max_request_size": "100MB"
+    },
+    "rate_limiting": {
+      "enabled": true,
+      "requests_per_minute": 100,
+      "burst_size": 20
+    },
+    "cors": {
+      "enabled": true,
+      "allowed_origins": ["*"],
+      "allowed_methods": ["GET", "POST", "PUT", "DELETE"],
+      "allowed_headers": ["*"]
+    }
+  },
+  "search": {
+    "default_settings": {
+      "max_results": 10,
+      "similarity_threshold": 0.7,
+      "enable_reranking": true,
+      "rerank_top_k": 50
+    },
+    "semantic_search": {
+      "weight": 0.7,
+      "enable_query_expansion": true,
+      "expansion_terms": 3
+    },
+    "keyword_search": {
+      "weight": 0.3,
+      "enable_fuzzy_matching": true,
+      "fuzzy_threshold": 0.8
+    },
+    "graph_search": {
+      "max_hops": 3,
+      "relationship_weights": {
+        "IS_A": 1.0,
+        "RELATED_TO": 0.8,
+        "USES": 0.7,
+        "ENABLES": 0.9
+      }
+    }
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "file_path": "logs/system.log",
+    "max_file_size": "10MB",
+    "backup_count": 5,
+    "enable_console": true
+  },
+  "monitoring": {
+    "metrics": {
+      "enabled": true,
+      "port": 9090,
+      "path": "/metrics"
+    },
+    "health_check": {
+      "enabled": true,
+      "path": "/health",
+      "interval_seconds": 30
+    },
+    "performance": {
+      "track_query_time": true,
+      "track_processing_time": true,
+      "slow_query_threshold_ms": 1000
+    }
+  },
+  "security": {
+    "authentication": {
+      "enabled": false,
+      "jwt_secret": "${JWT_SECRET}",
+      "token_expiry_hours": 24
+    },
+    "authorization": {
+      "enabled": false,
+      "default_role": "user",
+      "admin_users": []
+    },
+    "data_privacy": {
+      "anonymize_logs": true,
+      "encrypt_sensitive_data": true,
+      "data_retention_days": 365
+    }
+  },
+  "disciplines": {
+    "computer_science": {
+      "name": "Computer Science",
+      "name_zh": "计算机科学",
+      "subfields": [
+        {
+          "id": "computer_graphics",
+          "name": "Computer Graphics",
+          "name_zh": "计算机图形学",
+          "keywords": ["rendering", "ray tracing", "3d graphics", "visualization"]
+        },
+        {
+          "id": "artificial_intelligence", 
+          "name": "Artificial Intelligence",
+          "name_zh": "人工智能",
+          "keywords": ["machine learning", "deep learning", "neural networks", "nlp"]
+        },
+        {
+          "id": "systems_networks",
+          "name": "Systems and Networks", 
+          "name_zh": "系统与网络",
+          "keywords": ["operating systems", "distributed systems", "networking"]
+        }
+      ]
+    },
+    "physics": {
+      "name": "Physics",
+      "name_zh": "物理学",
+      "subfields": [
+        {
+          "id": "theoretical_physics",
+          "name": "Theoretical Physics",
+          "name_zh": "理论物理",
+          "keywords": ["quantum mechanics", "relativity", "statistical mechanics"]
+        },
+        {
+          "id": "applied_physics",
+          "name": "Applied Physics", 
+          "name_zh": "应用物理",
+          "keywords": ["condensed matter", "optics", "acoustics"]
+        }
+      ]
+    },
+    "mathematics": {
+      "name": "Mathematics",
+      "name_zh": "数学",
+      "subfields": [
+        {
+          "id": "pure_mathematics",
+          "name": "Pure Mathematics",
+          "name_zh": "纯数学", 
+          "keywords": ["algebra", "geometry", "analysis"]
+        },
+        {
+          "id": "applied_mathematics",
+          "name": "Applied Mathematics",
+          "name_zh": "应用数学",
+          "keywords": ["numerical analysis", "optimization", "statistics"]
+        }
+      ]
+    },
+    "biology": {
+      "name": "Biology",
+      "name_zh": "生物学",
+      "subfields": [
+        {
+          "id": "molecular_biology",
+          "name": "Molecular Biology",
+          "name_zh": "分子生物学",
+          "keywords": ["genomics", "proteomics", "genetics"]
+        },
+        {
+          "id": "ecology",
+          "name": "Ecology",
+          "name_zh": "生态学", 
+          "keywords": ["environmental biology", "conservation", "biodiversity"]
+        }
+      ]
+    },
+    "chemistry": {
+      "name": "Chemistry",
+      "name_zh": "化学",
+      "subfields": [
+        {
+          "id": "organic_chemistry",
+          "name": "Organic Chemistry",
+          "name_zh": "有机化学",
+          "keywords": ["organic synthesis", "molecular structure"]
+        },
+        {
+          "id": "physical_chemistry", 
+          "name": "Physical Chemistry",
+          "name_zh": "物理化学",
+          "keywords": ["thermodynamics", "kinetics", "spectroscopy"]
+        }
+      ]
+    },
+    "engineering": {
+      "name": "Engineering",
+      "name_zh": "工程学",
+      "subfields": [
+        {
+          "id": "mechanical_engineering",
+          "name": "Mechanical Engineering",
+          "name_zh": "机械工程",
+          "keywords": ["mechanics", "thermodynamics", "materials"]
+        },
+        {
+          "id": "electrical_engineering",
+          "name": "Electrical Engineering", 
+          "name_zh": "电气工程",
+          "keywords": ["circuits", "electronics", "signal processing"]
+        }
+      ]
+    }
+  }
+}

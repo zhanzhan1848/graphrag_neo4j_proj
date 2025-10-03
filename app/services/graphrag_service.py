@@ -44,7 +44,13 @@ class GraphRAGService:
         self.azure_openai = None
         self.chunk_size = settings.GRAPHRAG_CHUNK_SIZE
         self.chunk_overlap = settings.GRAPHRAG_CHUNK_OVERLAP
-        self._initialize_service()
+
+    @classmethod
+    async def create(cls):
+        """工厂方法：异步创建并初始化实例"""
+        self = cls()
+        await self._initialize_service()
+        return self
     
     async def _initialize_service(self):
         """初始化服务依赖"""
@@ -444,4 +450,4 @@ async def get_graphrag_service() -> GraphRAGService:
     Returns:
         GraphRAG 服务实例
     """
-    return graphrag_service
+    return await graphrag_service.create()

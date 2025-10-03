@@ -1,0 +1,198 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "description": "LLM提示词的泛用配置文件，用于知识抽取、概念识别和关系发现",
+    "created_at": "2024-01-01",
+    "updated_at": "2024-01-01"
+  },
+  "entity_extraction": {
+    "academic_concept_extraction": {
+      "description": "从学术文本中抽取概念实体",
+      "prompt_template": "你是一个专业的学术概念抽取专家。请从以下文本中识别和抽取学术概念、技术术语和专业名词。\n\n文本内容：\n{text}\n\n学科领域：{discipline}\n子领域：{subfield}\n\n请按照以下JSON格式输出结果：\n{\n  \"concepts\": [\n    {\n      \"text\": \"概念原文\",\n      \"preferredLabel\": \"标准化概念名称\",\n      \"altLabels\": [\"别名1\", \"别名2\"],\n      \"description\": \"概念描述\",\n      \"confidence\": 0.95,\n      \"position\": {\"start\": 10, \"end\": 25},\n      \"context\": \"概念出现的上下文\"\n    }\n  ]\n}\n\n注意事项：\n1. 只抽取与{discipline}相关的学术概念\n2. 置信度范围为0-1，表示概念识别的准确性\n3. 优先识别技术术语、方法名称、算法名称等\n4. 避免抽取过于通用的词汇",
+      "parameters": {
+        "text": "待处理的文本内容",
+        "discipline": "学科名称",
+        "subfield": "子学科名称"
+      },
+      "example": {
+        "text": "Ray tracing is a rendering technique that generates realistic images by simulating the physical behavior of light.",
+        "discipline": "Computer Science",
+        "subfield": "Computer Graphics"
+      }
+    },
+    "author_extraction": {
+      "description": "从文档中抽取作者信息",
+      "prompt_template": "请从以下文档元数据中抽取作者信息。\n\n文档内容：\n{text}\n\n请按照以下JSON格式输出结果：\n{\n  \"authors\": [\n    {\n      \"name\": \"作者姓名\",\n      \"affiliation\": \"所属机构\",\n      \"email\": \"邮箱地址\",\n      \"orcid\": \"ORCID标识符\",\n      \"confidence\": 0.95\n    }\n  ]\n}\n\n注意事项：\n1. 准确识别作者的完整姓名\n2. 提取所属机构信息\n3. 如果有ORCID或邮箱，请一并提取",
+      "parameters": {
+        "text": "包含作者信息的文档内容"
+      },
+      "example": {
+        "text": "John Smith (MIT, john.smith@mit.edu), Jane Doe (Stanford University)"
+      }
+    }
+  },
+  "relationship_extraction": {
+    "concept_relationship_extraction": {
+      "description": "抽取概念之间的关系",
+      "prompt_template": "你是一个专业的关系抽取专家。请从以下文本中识别概念之间的关系。\n\n文本内容：\n{text}\n\n已识别的概念：\n{concepts}\n\n请按照以下JSON格式输出概念之间的关系：\n{\n  \"relationships\": [\n    {\n      \"source_concept\": \"源概念\",\n      \"target_concept\": \"目标概念\",\n      \"relation_type\": \"关系类型\",\n      \"description\": \"关系描述\",\n      \"confidence\": 0.9,\n      \"evidence\": \"支持该关系的文本证据\",\n      \"context\": \"关系出现的上下文\"\n    }\n  ]\n}\n\n支持的关系类型：\n- IS_A: 是一种关系（概念层次）\n- PART_OF: 部分关系\n- USES: 使用关系\n- ENABLES: 使能关系\n- IMPROVES: 改进关系\n- EXTENDS: 扩展关系\n- APPLIES_TO: 应用于关系\n- CONTRADICTS: 矛盾关系\n- SUPPORTS: 支持关系\n- RELATED_TO: 一般相关关系\n\n注意事项：\n1. 只抽取明确表达的关系\n2. 提供充分的文本证据\n3. 置信度反映关系的确定性",
+      "parameters": {
+        "text": "待分析的文本内容",
+        "concepts": "已识别的概念列表"
+      },
+      "example": {
+        "text": "Ray tracing enables realistic global illumination by simulating light transport.",
+        "concepts": ["Ray tracing", "Global illumination", "Light transport"]
+      }
+    },
+    "citation_extraction": {
+      "description": "抽取引用关系和上下文",
+      "prompt_template": "请从以下文本中识别引用关系和引用上下文。\n\n文本内容：\n{text}\n\n请按照以下JSON格式输出引用信息：\n{\n  \"citations\": [\n    {\n      \"cited_work\": \"被引用的工作标题或标识\",\n      \"citation_context\": \"引用上下文\",\n      \"citation_purpose\": \"引用目的\",\n      \"page_number\": 页码,\n      \"confidence\": 0.95\n    }\n  ]\n}\n\n引用目的类型：\n- BACKGROUND: 背景介绍\n- COMPARISON: 比较研究\n- EXTENSION: 扩展工作\n- CRITICISM: 批评质疑\n- SUPPORT: 支持论证\n- METHOD: 方法借鉴",
+      "parameters": {
+        "text": "包含引用的文本内容"
+      },
+      "example": {
+        "text": "As demonstrated by Smith et al. [15], ray tracing can achieve photorealistic rendering."
+      }
+    }
+  },
+  "concept_canonicalization": {
+    "concept_similarity_analysis": {
+      "description": "分析概念相似性用于概念收敛",
+      "prompt_template": "你是一个概念标准化专家。请分析以下概念是否为同一概念的不同表达形式。\n\n概念1：{concept1}\n概念2：{concept2}\n\n上下文1：{context1}\n上下文2：{context2}\n\n学科领域：{discipline}\n\n请按照以下JSON格式输出分析结果：\n{\n  \"is_same_concept\": true/false,\n  \"similarity_score\": 0.85,\n  \"reasoning\": \"判断理由\",\n  \"canonical_form\": \"标准化形式\",\n  \"relationship_type\": \"关系类型\",\n  \"confidence\": 0.9\n}\n\n关系类型：\n- EXACT_MATCH: 完全相同\n- SYNONYM: 同义词\n- ABBREVIATION: 缩写关系\n- TRANSLATION: 翻译关系\n- VARIANT: 变体形式\n- RELATED: 相关但不同\n- UNRELATED: 无关\n\n注意事项：\n1. 考虑学科领域的专业性\n2. 分析上下文中的使用方式\n3. 提供详细的判断理由",
+      "parameters": {
+        "concept1": "第一个概念",
+        "concept2": "第二个概念", 
+        "context1": "概念1的上下文",
+        "context2": "概念2的上下文",
+        "discipline": "学科领域"
+      },
+      "example": {
+        "concept1": "Ray tracing",
+        "concept2": "光线追踪",
+        "context1": "Ray tracing is a rendering technique",
+        "context2": "光线追踪是一种渲染技术",
+        "discipline": "Computer Graphics"
+      }
+    },
+    "concept_standardization": {
+      "description": "概念标准化和规范化",
+      "prompt_template": "请对以下概念进行标准化处理，生成规范的概念表示。\n\n原始概念：{raw_concept}\n学科领域：{discipline}\n上下文：{context}\n\n请按照以下JSON格式输出标准化结果：\n{\n  \"standardized_concept\": {\n    \"preferredLabel\": \"标准化名称\",\n    \"altLabels\": [\"别名1\", \"别名2\"],\n    \"definition\": \"概念定义\",\n    \"category\": \"概念类别\",\n    \"language\": \"主要语言\",\n    \"confidence\": 0.95\n  }\n}\n\n概念类别：\n- ALGORITHM: 算法\n- METHOD: 方法\n- TECHNIQUE: 技术\n- THEORY: 理论\n- TOOL: 工具\n- METRIC: 度量\n- CONCEPT: 一般概念\n\n标准化原则：\n1. 使用领域内公认的术语\n2. 保持概念的准确性和完整性\n3. 考虑国际通用性",
+      "parameters": {
+        "raw_concept": "原始概念文本",
+        "discipline": "学科领域",
+        "context": "概念上下文"
+      },
+      "example": {
+        "raw_concept": "real-time ray-tracing",
+        "discipline": "Computer Graphics",
+        "context": "Real-time ray-tracing enables interactive rendering"
+      }
+    }
+  },
+  "document_analysis": {
+    "document_classification": {
+      "description": "文档分类和学科归属",
+      "prompt_template": "请分析以下文档并确定其学科归属和文档类型。\n\n文档标题：{title}\n文档摘要：{abstract}\n关键词：{keywords}\n\n请按照以下JSON格式输出分析结果：\n{\n  \"classification\": {\n    \"primary_discipline\": \"主要学科\",\n    \"secondary_disciplines\": [\"次要学科1\", \"次要学科2\"],\n    \"subfields\": [\"子领域1\", \"子领域2\"],\n    \"document_type\": \"文档类型\",\n    \"research_area\": \"研究方向\",\n    \"confidence\": 0.9\n  }\n}\n\n文档类型：\n- RESEARCH_PAPER: 研究论文\n- REVIEW_PAPER: 综述论文\n- CONFERENCE_PAPER: 会议论文\n- JOURNAL_ARTICLE: 期刊文章\n- THESIS: 学位论文\n- BOOK: 专著\n- TECHNICAL_REPORT: 技术报告\n\n支持的学科领域：\n{discipline_list}",
+      "parameters": {
+        "title": "文档标题",
+        "abstract": "文档摘要",
+        "keywords": "关键词列表",
+        "discipline_list": "支持的学科列表"
+      },
+      "example": {
+        "title": "Real-Time Ray Tracing on Modern GPUs",
+        "abstract": "This paper presents a novel approach...",
+        "keywords": ["ray tracing", "GPU", "real-time rendering"],
+        "discipline_list": ["Computer Science", "Physics", "Mathematics"]
+      }
+    },
+    "document_segmentation": {
+      "description": "文档智能分段",
+      "prompt_template": "请对以下文档内容进行智能分段，识别语义完整的段落。\n\n文档内容：\n{text}\n\n请按照以下JSON格式输出分段结果：\n{\n  \"segments\": [\n    {\n      \"id\": \"段落ID\",\n      \"text\": \"段落文本\",\n      \"section_type\": \"段落类型\",\n      \"start_char\": 起始字符位置,\n      \"end_char\": 结束字符位置,\n      \"importance_score\": 重要性分数,\n      \"main_concepts\": [\"主要概念1\", \"主要概念2\"]\n    }\n  ]\n}\n\n段落类型：\n- TITLE: 标题\n- ABSTRACT: 摘要\n- INTRODUCTION: 引言\n- METHODOLOGY: 方法\n- RESULTS: 结果\n- DISCUSSION: 讨论\n- CONCLUSION: 结论\n- REFERENCES: 参考文献\n- FIGURE_CAPTION: 图表说明\n- EQUATION: 公式\n- GENERAL: 一般内容\n\n分段原则：\n1. 保持语义完整性\n2. 适当的段落长度（100-500字符）\n3. 识别重要的概念密集段落",
+      "parameters": {
+        "text": "待分段的文档内容"
+      },
+      "example": {
+        "text": "Ray tracing is a rendering technique that generates realistic images..."
+      }
+    }
+  },
+  "quality_assessment": {
+    "extraction_quality_check": {
+      "description": "抽取质量评估",
+      "prompt_template": "请评估以下知识抽取结果的质量。\n\n原始文本：\n{original_text}\n\n抽取结果：\n{extraction_result}\n\n请按照以下JSON格式输出质量评估：\n{\n  \"quality_assessment\": {\n    \"overall_score\": 0.85,\n    \"completeness\": 0.9,\n    \"accuracy\": 0.8,\n    \"consistency\": 0.85,\n    \"issues\": [\n      {\n        \"type\": \"问题类型\",\n        \"description\": \"问题描述\",\n        \"severity\": \"严重程度\",\n        \"suggestion\": \"改进建议\"\n      }\n    ],\n    \"recommendations\": [\"改进建议1\", \"改进建议2\"]\n  }\n}\n\n问题类型：\n- MISSING_CONCEPT: 遗漏概念\n- INCORRECT_CONCEPT: 错误概念\n- WRONG_RELATIONSHIP: 错误关系\n- LOW_CONFIDENCE: 低置信度\n- INCONSISTENT_NAMING: 命名不一致\n\n严重程度：\n- HIGH: 高\n- MEDIUM: 中\n- LOW: 低",
+      "parameters": {
+        "original_text": "原始文本",
+        "extraction_result": "抽取结果"
+      },
+      "example": {
+        "original_text": "Ray tracing enables realistic rendering...",
+        "extraction_result": "{\"concepts\": [...], \"relationships\": [...]}"
+      }
+    }
+  },
+  "rag_prompts": {
+    "knowledge_query": {
+      "description": "知识查询和问答",
+      "prompt_template": "你是一个专业的学术知识助手。基于以下知识图谱信息回答用户问题。\n\n用户问题：{question}\n\n相关知识：\n{knowledge_context}\n\n图谱关系：\n{graph_context}\n\n请按照以下要求回答：\n1. 基于提供的知识进行回答\n2. 引用具体的文献来源\n3. 说明概念之间的关系\n4. 如果信息不足，明确指出\n5. 提供可追溯的证据链\n\n回答格式：\n## 回答\n[详细回答内容]\n\n## 相关概念\n- 概念1：[定义和说明]\n- 概念2：[定义和说明]\n\n## 文献来源\n- [文献1]：[相关内容]\n- [文献2]：[相关内容]\n\n## 概念关系\n[概念之间的关系说明]\n\n## 置信度\n[回答的可信度评估]",
+      "parameters": {
+        "question": "用户问题",
+        "knowledge_context": "相关知识上下文",
+        "graph_context": "图谱关系上下文"
+      },
+      "example": {
+        "question": "什么是光线追踪？它在计算机图形学中的应用是什么？",
+        "knowledge_context": "Ray tracing is a rendering technique...",
+        "graph_context": "Ray Tracing -> IS_A -> Rendering Technique"
+      }
+    },
+    "concept_explanation": {
+      "description": "概念解释和扩展",
+      "prompt_template": "请详细解释以下概念，并提供相关的背景知识。\n\n目标概念：{concept}\n学科领域：{discipline}\n\n相关信息：\n{concept_info}\n\n相关概念：\n{related_concepts}\n\n请按照以下结构提供解释：\n\n## 概念定义\n[清晰的概念定义]\n\n## 核心特征\n[概念的主要特征和属性]\n\n## 应用领域\n[概念的应用场景和领域]\n\n## 相关概念\n[与该概念相关的其他概念]\n\n## 发展历史\n[概念的发展历程，如果有相关信息]\n\n## 实际案例\n[具体的应用案例或示例]\n\n## 进一步阅读\n[推荐的相关文献或资源]",
+      "parameters": {
+        "concept": "目标概念",
+        "discipline": "学科领域",
+        "concept_info": "概念相关信息",
+        "related_concepts": "相关概念列表"
+      },
+      "example": {
+        "concept": "Ray Tracing",
+        "discipline": "Computer Graphics",
+        "concept_info": "Ray tracing is a rendering technique...",
+        "related_concepts": ["Global Illumination", "Path Tracing", "Monte Carlo Methods"]
+      }
+    }
+  },
+  "system_prompts": {
+    "error_handling": {
+      "description": "错误处理和异常情况",
+      "prompt_template": "在处理过程中遇到了以下问题：\n\n错误类型：{error_type}\n错误详情：{error_details}\n输入内容：{input_content}\n\n请分析可能的原因并提供解决建议：\n\n1. 问题分析\n2. 可能原因\n3. 解决方案\n4. 预防措施\n\n如果无法处理，请明确说明限制和建议的替代方案。",
+      "parameters": {
+        "error_type": "错误类型",
+        "error_details": "错误详细信息",
+        "input_content": "输入内容"
+      },
+      "example": {
+        "error_type": "CONCEPT_EXTRACTION_FAILED",
+        "error_details": "Unable to identify any concepts in the text",
+        "input_content": "Some text content..."
+      }
+    },
+    "confidence_calibration": {
+      "description": "置信度校准指导",
+      "prompt_template": "请根据以下因素校准你的置信度评分：\n\n抽取任务：{task_type}\n文本质量：{text_quality}\n领域匹配度：{domain_match}\n上下文完整性：{context_completeness}\n\n置信度评分标准：\n- 0.9-1.0：非常确定，有明确证据\n- 0.7-0.9：比较确定，有较好证据\n- 0.5-0.7：中等确定，有一定证据\n- 0.3-0.5：不太确定，证据不足\n- 0.0-0.3：很不确定，几乎无证据\n\n请为你的抽取结果提供合适的置信度评分，并说明评分理由。",
+      "parameters": {
+        "task_type": "任务类型",
+        "text_quality": "文本质量评估",
+        "domain_match": "领域匹配程度",
+        "context_completeness": "上下文完整性"
+      },
+      "example": {
+        "task_type": "concept_extraction",
+        "text_quality": "high",
+        "domain_match": "exact",
+        "context_completeness": "complete"
+      }
+    }
+  }
+}

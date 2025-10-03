@@ -1,8 +1,8 @@
-# GraphRAG 知识图谱系统
+# 多学科知识库系统 (Multi-Disciplinary Knowledge Base System)
 
 <div align="center">
 
-![GraphRAG Logo](https://img.shields.io/badge/GraphRAG-Knowledge%20Graph%20System-blue?style=for-the-badge)
+![Knowledge Base Logo](https://img.shields.io/badge/Knowledge%20Base-Multi%20Disciplinary%20System-blue?style=for-the-badge)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -10,15 +10,23 @@
 [![Neo4j](https://img.shields.io/badge/Neo4j-5.0+-red.svg)](https://neo4j.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 
-**一个基于知识图谱的检索增强生成（RAG）系统**
+**基于图数据库和向量检索的多学科知识库系统**
 
-[快速开始](#-快速开始) • [功能特性](#-功能特性) • [系统架构](#-系统架构) • [文档](#-文档) • [贡献](#-贡献)
+[快速开始](#-快速开始) • [功能特性](#-功能特性) • [系统架构](#-系统架构) • [配置文档](#-配置文档) • [使用示例](#-使用示例)
 
 </div>
 
 ## 📖 项目概述
 
-GraphRAG 是一个先进的知识图谱系统，专为构建智能化的文档知识库而设计。系统能够通过 HTTP 接口批量或按需导入论文、书籍、笔记等各类文档，自动从中抽取实体、关系、断言（claims）、引用与证据，并将这些知识以图数据库（Neo4j）为核心、关系数据库（PostgreSQL）作为文档/元数据存储、向量数据库支持语义检索的形式进行组织和呈现。
+本项目是一个专门为多学科学术研究设计的知识库系统，支持计算机科学、物理学、数学、生物学、化学、工程学等多个学科领域。系统能够通过 HTTP 接口批量或按需导入论文、书籍、笔记等学术资源，自动从中抽取实体、关系、断言（claims）、引用与证据，并将这些知识以图数据库（Neo4j）为主、关系数据库（PostgreSQL）作文档/元数据存储 + 向量/语义检索支持的形式呈现，便于后续查询、推理、可视化与 RAG（检索增强生成）。
+
+### 🎯 核心价值
+
+- **多学科支持**: 原生支持多个学科领域的知识组织和管理
+- **动态配置**: 通过JSON配置文件实现系统的灵活定制
+- **跨学科分析**: 发现和分析不同学科间的知识关联
+- **智能概念收敛**: 自动识别和合并相似概念，构建统一知识体系
+- **可追溯性**: 每个关系/断言都能回溯到源文档和具体位置
 
 ### 🎯 核心价值
 

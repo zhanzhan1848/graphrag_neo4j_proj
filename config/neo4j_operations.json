@@ -1,0 +1,470 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Neo4j数据库操作的泛用配置文件",
+    "created_at": "2024-01-01",
+    "updated_at": "2024-01-01"
+  },
+  "node_operations": {
+    "create_discipline": {
+      "description": "创建学科节点",
+      "cypher": "CREATE (d:Discipline {id: $id, name: $name, name_en: $name_en, name_zh: $name_zh, description: $description, level: $level, created_at: datetime(), updated_at: datetime()}) RETURN d",
+      "parameters": {
+        "id": "string",
+        "name": "string", 
+        "name_en": "string",
+        "name_zh": "string",
+        "description": "string",
+        "level": "integer"
+      },
+      "example": {
+        "id": "D_COMPUTER_SCIENCE",
+        "name": "Computer Science",
+        "name_en": "Computer Science",
+        "name_zh": "计算机科学",
+        "description": "The study of algorithmic processes and computational systems",
+        "level": 1
+      }
+    },
+    "create_subfield": {
+      "description": "创建子学科节点",
+      "cypher": "CREATE (s:Subfield {id: $id, name: $name, name_en: $name_en, name_zh: $name_zh, description: $description, level: $level, parent_discipline: $parent_discipline, created_at: datetime(), updated_at: datetime()}) RETURN s",
+      "parameters": {
+        "id": "string",
+        "name": "string",
+        "name_en": "string", 
+        "name_zh": "string",
+        "description": "string",
+        "level": "integer",
+        "parent_discipline": "string"
+      },
+      "example": {
+        "id": "SF_COMPUTER_GRAPHICS",
+        "name": "Computer Graphics",
+        "name_en": "Computer Graphics",
+        "name_zh": "计算机图形学",
+        "description": "The field of visual computing",
+        "level": 2,
+        "parent_discipline": "D_COMPUTER_SCIENCE"
+      }
+    },
+    "create_concept": {
+      "description": "创建概念节点",
+      "cypher": "CREATE (c:Concept {id: $id, preferredLabel: $preferredLabel, altLabels: $altLabels, description: $description, canonical: $canonical, confidence: $confidence, source: $source, embedding_id: $embedding_id, created_at: datetime(), updated_at: datetime()}) RETURN c",
+      "parameters": {
+        "id": "string",
+        "preferredLabel": "string",
+        "altLabels": "list",
+        "description": "string",
+        "canonical": "boolean",
+        "confidence": "float",
+        "source": "string",
+        "embedding_id": "string"
+      },
+      "example": {
+        "id": "C_RAY_TRACING",
+        "preferredLabel": "Ray Tracing",
+        "altLabels": ["光线追踪", "射线跟踪", "Ray Casting"],
+        "description": "A rendering technique for generating realistic images",
+        "canonical": true,
+        "confidence": 0.95,
+        "source": "auto_extracted",
+        "embedding_id": "emb_001"
+      }
+    },
+    "create_document": {
+      "description": "创建文档节点",
+      "cypher": "CREATE (d:Document {id: $id, title: $title, authors: $authors, year: $year, venue: $venue, doi: $doi, url: $url, abstract: $abstract, keywords: $keywords, language: $language, document_type: $document_type, file_path: $file_path, created_at: datetime(), updated_at: datetime()}) RETURN d",
+      "parameters": {
+        "id": "string",
+        "title": "string",
+        "authors": "list",
+        "year": "integer",
+        "venue": "string",
+        "doi": "string",
+        "url": "string",
+        "abstract": "string",
+        "keywords": "list",
+        "language": "string",
+        "document_type": "string",
+        "file_path": "string"
+      },
+      "example": {
+        "id": "DOC_001",
+        "title": "Real-Time Ray Tracing in Modern GPUs",
+        "authors": ["John Smith", "Jane Doe"],
+        "year": 2023,
+        "venue": "SIGGRAPH",
+        "doi": "10.1145/example",
+        "url": "https://example.com/paper",
+        "abstract": "This paper presents...",
+        "keywords": ["ray tracing", "GPU", "real-time"],
+        "language": "en",
+        "document_type": "paper",
+        "file_path": "/docs/paper001.pdf"
+      }
+    },
+    "create_segment": {
+      "description": "创建文档片段节点",
+      "cypher": "CREATE (s:Segment {id: $id, text: $text, start_char: $start_char, end_char: $end_char, page: $page, section: $section, document_id: $document_id, embedding_id: $embedding_id, language: $language, created_at: datetime()}) RETURN s",
+      "parameters": {
+        "id": "string",
+        "text": "string",
+        "start_char": "integer",
+        "end_char": "integer",
+        "page": "integer",
+        "section": "string",
+        "document_id": "string",
+        "embedding_id": "string",
+        "language": "string"
+      },
+      "example": {
+        "id": "SEG_001",
+        "text": "Ray tracing is a rendering technique...",
+        "start_char": 100,
+        "end_char": 500,
+        "page": 1,
+        "section": "Introduction",
+        "document_id": "DOC_001",
+        "embedding_id": "emb_seg_001",
+        "language": "en"
+      }
+    },
+    "create_author": {
+      "description": "创建作者节点",
+      "cypher": "CREATE (a:Author {id: $id, name: $name, orcid: $orcid, affiliation: $affiliation, email: $email, h_index: $h_index, created_at: datetime(), updated_at: datetime()}) RETURN a",
+      "parameters": {
+        "id": "string",
+        "name": "string",
+        "orcid": "string",
+        "affiliation": "string",
+        "email": "string",
+        "h_index": "integer"
+      },
+      "example": {
+        "id": "AUTH_001",
+        "name": "John Smith",
+        "orcid": "0000-0000-0000-0000",
+        "affiliation": "MIT",
+        "email": "john@mit.edu",
+        "h_index": 25
+      }
+    },
+    "create_venue": {
+      "description": "创建期刊/会议节点",
+      "cypher": "CREATE (v:Venue {id: $id, name: $name, type: $type, impact_factor: $impact_factor, h5_index: $h5_index, publisher: $publisher, created_at: datetime()}) RETURN v",
+      "parameters": {
+        "id": "string",
+        "name": "string",
+        "type": "string",
+        "impact_factor": "float",
+        "h5_index": "integer",
+        "publisher": "string"
+      },
+      "example": {
+        "id": "VEN_SIGGRAPH",
+        "name": "SIGGRAPH",
+        "type": "conference",
+        "impact_factor": 4.5,
+        "h5_index": 89,
+        "publisher": "ACM"
+      }
+    }
+  },
+  "relationship_operations": {
+    "create_belongs_to": {
+      "description": "创建归属关系",
+      "cypher": "MATCH (s:Subfield {id: $subfield_id}), (d:Discipline {id: $discipline_id}) CREATE (s)-[:BELONGS_TO]->(d)",
+      "parameters": {
+        "subfield_id": "string",
+        "discipline_id": "string"
+      },
+      "example": {
+        "subfield_id": "SF_COMPUTER_GRAPHICS",
+        "discipline_id": "D_COMPUTER_SCIENCE"
+      }
+    },
+    "create_is_a": {
+      "description": "创建IS_A关系",
+      "cypher": "MATCH (c:Concept {id: $concept_id}), (s:Subfield {id: $subfield_id}) CREATE (c)-[:IS_A]->(s)",
+      "parameters": {
+        "concept_id": "string",
+        "subfield_id": "string"
+      },
+      "example": {
+        "concept_id": "C_RAY_TRACING",
+        "subfield_id": "SF_COMPUTER_GRAPHICS"
+      }
+    },
+    "create_has_segment": {
+      "description": "创建文档包含片段关系",
+      "cypher": "MATCH (d:Document {id: $document_id}), (s:Segment {id: $segment_id}) CREATE (d)-[:HAS_SEGMENT]->(s)",
+      "parameters": {
+        "document_id": "string",
+        "segment_id": "string"
+      },
+      "example": {
+        "document_id": "DOC_001",
+        "segment_id": "SEG_001"
+      }
+    },
+    "create_mentions": {
+      "description": "创建片段提及概念关系",
+      "cypher": "MATCH (s:Segment {id: $segment_id}), (c:Concept {id: $concept_id}) CREATE (s)-[:MENTIONS {score: $score, position: $position, provenance: $provenance}]->(c)",
+      "parameters": {
+        "segment_id": "string",
+        "concept_id": "string",
+        "score": "float",
+        "position": "integer",
+        "provenance": "string"
+      },
+      "example": {
+        "segment_id": "SEG_001",
+        "concept_id": "C_RAY_TRACING",
+        "score": 0.95,
+        "position": 150,
+        "provenance": "NER_extraction"
+      }
+    },
+    "create_authored_by": {
+      "description": "创建文档作者关系",
+      "cypher": "MATCH (d:Document {id: $document_id}), (a:Author {id: $author_id}) CREATE (d)-[:AUTHORED_BY]->(a)",
+      "parameters": {
+        "document_id": "string",
+        "author_id": "string"
+      },
+      "example": {
+        "document_id": "DOC_001",
+        "author_id": "AUTH_001"
+      }
+    },
+    "create_published_in": {
+      "description": "创建文档发表关系",
+      "cypher": "MATCH (d:Document {id: $document_id}), (v:Venue {id: $venue_id}) CREATE (d)-[:PUBLISHED_IN]->(v)",
+      "parameters": {
+        "document_id": "string",
+        "venue_id": "string"
+      },
+      "example": {
+        "document_id": "DOC_001",
+        "venue_id": "VEN_SIGGRAPH"
+      }
+    },
+    "create_cites": {
+      "description": "创建引用关系",
+      "cypher": "MATCH (d1:Document {id: $citing_doc_id}), (d2:Document {id: $cited_doc_id}) CREATE (d1)-[:CITES {context: $context, page: $page}]->(d2)",
+      "parameters": {
+        "citing_doc_id": "string",
+        "cited_doc_id": "string",
+        "context": "string",
+        "page": "integer"
+      },
+      "example": {
+        "citing_doc_id": "DOC_001",
+        "cited_doc_id": "DOC_002",
+        "context": "As shown in previous work...",
+        "page": 3
+      }
+    },
+    "create_same_as": {
+      "description": "创建概念同义关系",
+      "cypher": "MATCH (c1:Concept {id: $concept1_id}), (c2:Concept {id: $concept2_id}) CREATE (c1)-[:SAME_AS {confidence: $confidence, method: $method}]->(c2)",
+      "parameters": {
+        "concept1_id": "string",
+        "concept2_id": "string",
+        "confidence": "float",
+        "method": "string"
+      },
+      "example": {
+        "concept1_id": "C_RAY_TRACING",
+        "concept2_id": "C_RAY_CASTING",
+        "confidence": 0.85,
+        "method": "embedding_similarity"
+      }
+    },
+    "create_related_to": {
+      "description": "创建概念相关关系",
+      "cypher": "MATCH (c1:Concept {id: $concept1_id}), (c2:Concept {id: $concept2_id}) CREATE (c1)-[:RELATED_TO {relationType: $relationType, weight: $weight, evidence: $evidence}]->(c2)",
+      "parameters": {
+        "concept1_id": "string",
+        "concept2_id": "string",
+        "relationType": "string",
+        "weight": "float",
+        "evidence": "string"
+      },
+      "example": {
+        "concept1_id": "C_RAY_TRACING",
+        "concept2_id": "C_GLOBAL_ILLUMINATION",
+        "relationType": "ENABLES",
+        "weight": 0.9,
+        "evidence": "Ray tracing enables realistic global illumination"
+      }
+    }
+  },
+  "query_operations": {
+    "find_concept_by_label": {
+      "description": "根据标签查找概念",
+      "cypher": "MATCH (c:Concept) WHERE c.preferredLabel CONTAINS $label OR ANY(alt IN c.altLabels WHERE alt CONTAINS $label) RETURN c",
+      "parameters": {
+        "label": "string"
+      },
+      "example": {
+        "label": "ray tracing"
+      }
+    },
+    "find_documents_by_concept": {
+      "description": "查找提及特定概念的文档",
+      "cypher": "MATCH (d:Document)-[:HAS_SEGMENT]->(s:Segment)-[:MENTIONS]->(c:Concept {id: $concept_id}) RETURN DISTINCT d, collect(s) as segments",
+      "parameters": {
+        "concept_id": "string"
+      },
+      "example": {
+        "concept_id": "C_RAY_TRACING"
+      }
+    },
+    "find_related_concepts": {
+      "description": "查找相关概念",
+      "cypher": "MATCH (c:Concept {id: $concept_id})-[:RELATED_TO]-(related:Concept) RETURN related, type(r) as relation_type",
+      "parameters": {
+        "concept_id": "string"
+      },
+      "example": {
+        "concept_id": "C_RAY_TRACING"
+      }
+    },
+    "find_concept_hierarchy": {
+      "description": "查找概念层次结构",
+      "cypher": "MATCH path = (c:Concept {id: $concept_id})-[:IS_A*]->(s:Subfield)-[:BELONGS_TO]->(d:Discipline) RETURN path",
+      "parameters": {
+        "concept_id": "string"
+      },
+      "example": {
+        "concept_id": "C_RAY_TRACING"
+      }
+    },
+    "find_author_papers": {
+      "description": "查找作者的论文",
+      "cypher": "MATCH (a:Author {id: $author_id})<-[:AUTHORED_BY]-(d:Document) RETURN d ORDER BY d.year DESC",
+      "parameters": {
+        "author_id": "string"
+      },
+      "example": {
+        "author_id": "AUTH_001"
+      }
+    },
+    "find_citation_network": {
+      "description": "查找引用网络",
+      "cypher": "MATCH (d:Document {id: $document_id})-[:CITES*1..3]-(related:Document) RETURN d, related, length(path) as distance",
+      "parameters": {
+        "document_id": "string"
+      },
+      "example": {
+        "document_id": "DOC_001"
+      }
+    },
+    "find_cross_discipline_concepts": {
+      "description": "查找跨学科概念",
+      "cypher": "MATCH (c:Concept)-[:IS_A]->(s1:Subfield)-[:BELONGS_TO]->(d1:Discipline), (c)-[:RELATED_TO]-(c2:Concept)-[:IS_A]->(s2:Subfield)-[:BELONGS_TO]->(d2:Discipline) WHERE d1 <> d2 RETURN c, d1.name as discipline1, d2.name as discipline2",
+      "parameters": {},
+      "example": {}
+    }
+  },
+  "batch_operations": {
+    "create_discipline_hierarchy": {
+      "description": "批量创建学科层次结构",
+      "cypher": "UNWIND $disciplines as discipline CREATE (d:Discipline {id: discipline.id, name: discipline.name, name_en: discipline.name_en, name_zh: discipline.name_zh, description: discipline.description, level: discipline.level, created_at: datetime(), updated_at: datetime()}) WITH d, discipline UNWIND discipline.subfields as subfield CREATE (s:Subfield {id: subfield.id, name: subfield.name, name_en: subfield.name_en, name_zh: subfield.name_zh, description: subfield.description, level: subfield.level, parent_discipline: d.id, created_at: datetime(), updated_at: datetime()}) CREATE (s)-[:BELONGS_TO]->(d)",
+      "parameters": {
+        "disciplines": "list"
+      },
+      "example": {
+        "disciplines": [
+          {
+            "id": "D_COMPUTER_SCIENCE",
+            "name": "Computer Science",
+            "name_en": "Computer Science",
+            "name_zh": "计算机科学",
+            "description": "The study of algorithmic processes",
+            "level": 1,
+            "subfields": [
+              {
+                "id": "SF_COMPUTER_GRAPHICS",
+                "name": "Computer Graphics",
+                "name_en": "Computer Graphics",
+                "name_zh": "计算机图形学",
+                "description": "Visual computing field",
+                "level": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "merge_concepts": {
+      "description": "批量合并同义概念",
+      "cypher": "UNWIND $merges as merge MATCH (c1:Concept {id: merge.source_id}), (c2:Concept {id: merge.target_id}) CREATE (c1)-[:SAME_AS {confidence: merge.confidence, method: merge.method}]->(c2) SET c1.canonical = false, c2.canonical = true",
+      "parameters": {
+        "merges": "list"
+      },
+      "example": {
+        "merges": [
+          {
+            "source_id": "C_RAY_CASTING",
+            "target_id": "C_RAY_TRACING",
+            "confidence": 0.85,
+            "method": "manual_review"
+          }
+        ]
+      }
+    }
+  },
+  "maintenance_operations": {
+    "update_concept_confidence": {
+      "description": "更新概念置信度",
+      "cypher": "MATCH (c:Concept {id: $concept_id}) SET c.confidence = $confidence, c.updated_at = datetime()",
+      "parameters": {
+        "concept_id": "string",
+        "confidence": "float"
+      },
+      "example": {
+        "concept_id": "C_RAY_TRACING",
+        "confidence": 0.98
+      }
+    },
+    "delete_low_confidence_concepts": {
+      "description": "删除低置信度概念",
+      "cypher": "MATCH (c:Concept) WHERE c.confidence < $threshold DETACH DELETE c",
+      "parameters": {
+        "threshold": "float"
+      },
+      "example": {
+        "threshold": 0.3
+      }
+    },
+    "rebuild_indexes": {
+      "description": "重建索引",
+      "cypher": "CREATE INDEX concept_preferred_label IF NOT EXISTS FOR (c:Concept) ON (c.preferredLabel); CREATE INDEX document_title IF NOT EXISTS FOR (d:Document) ON (d.title); CREATE INDEX segment_document_id IF NOT EXISTS FOR (s:Segment) ON (s.document_id)",
+      "parameters": {},
+      "example": {}
+    }
+  },
+  "validation_operations": {
+    "check_orphaned_concepts": {
+      "description": "检查孤立概念",
+      "cypher": "MATCH (c:Concept) WHERE NOT (c)-[:IS_A]->() AND NOT ()-[:MENTIONS]->(c) RETURN c",
+      "parameters": {},
+      "example": {}
+    },
+    "check_missing_embeddings": {
+      "description": "检查缺失向量的概念",
+      "cypher": "MATCH (c:Concept) WHERE c.embedding_id IS NULL OR c.embedding_id = '' RETURN c",
+      "parameters": {},
+      "example": {}
+    },
+    "validate_hierarchy": {
+      "description": "验证层次结构完整性",
+      "cypher": "MATCH (s:Subfield) WHERE NOT (s)-[:BELONGS_TO]->(:Discipline) RETURN s as orphaned_subfields",
+      "parameters": {},
+      "example": {}
+    }
+  }
+}
