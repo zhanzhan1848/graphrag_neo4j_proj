@@ -47,8 +47,8 @@ services:
       # 禁用严格配置验证以避免未知配置项错误
       NEO4J_server_config_strict__validation_enabled: "false"
       # Neo4j 5.x 认证配置 - 使用默认的 native 认证
-      NEO4J_dbms_security_auth__enabled: "true"
-      NEO4J_PLUGINS: "apoc,graph-data-science"
+      # NEO4J_dbms_security_auth__enabled: "true"
+      NEO4J_PLUGINS: '["apoc" , "graph-data-science"]'
     ports:
       - "7475:7474"  # HTTP (修改为 7475 避免冲突)
       - "7688:7687"  # Bolt (修改为 7688 避免冲突)

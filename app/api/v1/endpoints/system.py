@@ -31,6 +31,7 @@ from pydantic import BaseModel
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.utils.health_check import health_checker
 
 # 获取日志记录器
 logger = get_logger(__name__)
@@ -320,38 +321,62 @@ async def _check_service_dependency(service_config: Dict[str, Any]) -> ServiceDe
 
 async def _check_postgres():
     """检查 PostgreSQL 连接"""
-    # TODO: 实现 PostgreSQL 连接检查
-    # 这里应该尝试连接数据库并执行简单查询
-    await asyncio.sleep(0.1)  # 模拟检查时间
-    # raise Exception("PostgreSQL 连接检查未实现")
+    try:
+        result = await health_checker.check_postgres()
+        if result != "connected":
+            raise Exception(f"PostgreSQL 连接状态: {result}")
+        logger.debug("PostgreSQL 连接检查通过")
+    except Exception as e:
+        logger.error(f"PostgreSQL 连接检查失败: {e}")
+        raise Exception(f"PostgreSQL 连接检查失败: {e}")
 
 
 async def _check_neo4j():
     """检查 Neo4j 连接"""
-    # TODO: 实现 Neo4j 连接检查
-    await asyncio.sleep(0.1)  # 模拟检查时间
-    # raise Exception("Neo4j 连接检查未实现")
+    try:
+        result = await health_checker.check_neo4j()
+        if result != "connected":
+            raise Exception(f"Neo4j 连接状态: {result}")
+        logger.debug("Neo4j 连接检查通过")
+    except Exception as e:
+        logger.error(f"Neo4j 连接检查失败: {e}")
+        raise Exception(f"Neo4j 连接检查失败: {e}")
 
 
 async def _check_redis():
     """检查 Redis 连接"""
-    # TODO: 实现 Redis 连接检查
-    await asyncio.sleep(0.1)  # 模拟检查时间
-    # raise Exception("Redis 连接检查未实现")
+    try:
+        result = await health_checker.check_redis()
+        if result != "connected":
+            raise Exception(f"Redis 连接状态: {result}")
+        logger.debug("Redis 连接检查通过")
+    except Exception as e:
+        logger.error(f"Redis 连接检查失败: {e}")
+        raise Exception(f"Redis 连接检查失败: {e}")
 
 
 async def _check_weaviate():
     """检查 Weaviate 连接"""
-    # TODO: 实现 Weaviate 连接检查
-    await asyncio.sleep(0.1)  # 模拟检查时间
-    # raise Exception("Weaviate 连接检查未实现")
+    try:
+        result = await health_checker.check_weaviate()
+        if result != "connected":
+            raise Exception(f"Weaviate 连接状态: {result}")
+        logger.debug("Weaviate 连接检查通过")
+    except Exception as e:
+        logger.error(f"Weaviate 连接检查失败: {e}")
+        raise Exception(f"Weaviate 连接检查失败: {e}")
 
 
 async def _check_minio():
     """检查 MinIO 连接"""
-    # TODO: 实现 MinIO 连接检查
-    await asyncio.sleep(0.1)  # 模拟检查时间
-    # raise Exception("MinIO 连接检查未实现")
+    try:
+        result = await health_checker.check_minio()
+        if result != "connected":
+            raise Exception(f"MinIO 连接状态: {result}")
+        logger.debug("MinIO 连接检查通过")
+    except Exception as e:
+        logger.error(f"MinIO 连接检查失败: {e}")
+        raise Exception(f"MinIO 连接检查失败: {e}")
 
 
 @router.get("/info",
