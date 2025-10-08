@@ -27,6 +27,7 @@ from typing import Dict, Any
 
 from app.core.config import settings
 from app.core.logging import setup_logging, get_logger
+from app.core.dependencies import service_lifespan, initialize_services, shutdown_services, health_check_services
 from app.middleware.logging_middleware import LoggingMiddleware
 from app.api.v1.router import api_router
 
@@ -42,7 +43,7 @@ async def lifespan(app: FastAPI):
     应用生命周期管理器
     
     负责应用启动和关闭时的初始化和清理工作：
-    - 启动时：初始化数据库连接、缓存等
+    - 启动时：初始化数据库连接、缓存、服务等
     - 关闭时：清理资源、关闭连接等
     """
     # 启动时执行
@@ -51,10 +52,39 @@ async def lifespan(app: FastAPI):
     logger.info(f"运行环境: {settings.ENVIRONMENT}")
     logger.info(f"调试模式: {settings.DEBUG}")
     
+    try:
+        # 初始化所有服务
+        logger.info("正在初始化服务...")
+        await initialize_services()
+        logger.info("所有服务初始化完成")
+        
+        # 执行健康检查
+        health_status = await health_check_services()
+        if health_status.get("status") == "healthy":
+            logger.info("服务健康检查通过")
+        else:
+            logger.warning(f"服务健康检查警告: {health_status}")
+        
+        logger.info("GraphRAG API 服务启动完成")
+        
+    except Exception as e:
+        logger.error(f"服务启动失败: {str(e)}")
+        raise
+    
     yield
     
     # 关闭时执行
     logger.info("GraphRAG API 服务正在关闭...")
+    
+    try:
+        # 关闭所有服务
+        await shutdown_services()
+        logger.info("所有服务关闭完成")
+        
+    except Exception as e:
+        logger.error(f"服务关闭失败: {str(e)}")
+    
+    logger.info("GraphRAG API 服务关闭完成")
 
 
 def create_application() -> FastAPI:
@@ -136,17 +166,38 @@ def create_application() -> FastAPI:
         Returns:
             Dict[str, Any]: 健康状态信息
         """
-        return {
-            "success": True,
-            "data": {
-                "status": "healthy",
-                "service": settings.APP_NAME,
-                "version": settings.VERSION,
-                "environment": settings.ENVIRONMENT,
-                "timestamp": datetime.utcnow().isoformat() + "Z"
-            },
-            "message": "服务运行正常"
-        }
+        try:
+            # 执行详细的服务健康检查
+            health_status = await health_check_services()
+            
+            return {
+                "success": True,
+                "data": {
+                    "status": health_status.get("status", "unknown"),
+                    "service": settings.APP_NAME,
+                    "version": settings.VERSION,
+                    "environment": settings.ENVIRONMENT,
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "services": health_status.get("services", {}),
+                    "container_info": health_status.get("container_info", {})
+                },
+                "message": "服务健康检查完成"
+            }
+            
+        except Exception as e:
+            logger.error(f"健康检查失败: {str(e)}")
+            return {
+                "success": False,
+                "data": {
+                    "status": "unhealthy",
+                    "service": settings.APP_NAME,
+                    "version": settings.VERSION,
+                    "environment": settings.ENVIRONMENT,
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "error": str(e)
+                },
+                "message": "服务健康检查失败"
+            }
     
     # 添加根路径端点
     @app.get("/", tags=["系统"])

@@ -32,7 +32,7 @@ from typing import Dict, Any
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.api.v1.endpoints import system, graphrag
+from app.api.v1.endpoints import system, graphrag, documents, knowledge, graph, document_management, rag
 
 # 获取日志记录器
 logger = get_logger(__name__)
@@ -52,6 +52,41 @@ api_router.include_router(
     graphrag.router,
     prefix="/graphrag",
     tags=["GraphRAG"]
+)
+
+# 包含文档管理路由
+api_router.include_router(
+    documents.router,
+    prefix="/documents",
+    tags=["文档管理"]
+)
+
+# 包含知识抽取路由
+api_router.include_router(
+    knowledge.router,
+    prefix="/knowledge",
+    tags=["知识抽取"]
+)
+
+# 包含图查询路由
+api_router.include_router(
+    graph.router,
+    prefix="/graph",
+    tags=["图查询"]
+)
+
+# 包含文档管理路由（新版本）
+api_router.include_router(
+    document_management.router,
+    prefix="/document-management",
+    tags=["文档管理v2"]
+)
+
+# 包含 RAG 问答路由
+api_router.include_router(
+    rag.router,
+    prefix="/rag",
+    tags=["RAG问答"]
 )
 
 # TODO: 添加其他路由模块

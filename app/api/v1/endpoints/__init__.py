@@ -41,9 +41,15 @@ GraphRAG 系统 API v1 端点模块
 """
 
 # 导入已实现的端点模块
-from . import system
+from . import system, graphrag, documents, knowledge, graph, document_management, rag
 
 # 定义可导出的模块
 __all__ = [
-    "system"
+    "system",
+    "graphrag", 
+    "documents",
+    "knowledge",
+    "graph",
+    "document_management",
+    "rag"
 ]

@@ -1,0 +1,192 @@
+# GraphRAG API 服务项目配置
+# 使用 uv 进行现代化的 Python 依赖管理
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "graphrag-api"
+version = "0.1.0"
+description = "GraphRAG API 服务 - 基于图数据库和向量检索的知识库系统"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "GraphRAG Team", email = "team@graphrag.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.11"
+
+# 核心依赖
+dependencies = [
+    # 核心 Web 框架和服务器
+    "fastapi==0.104.1",
+    "uvicorn[standard]==0.24.0",
+    "pydantic==2.5.0",
+    "pydantic-settings==2.1.0",
+    
+    # HTTP 客户端和工具
+    "httpx==0.25.2",
+    "requests==2.31.0",
+    
+    # 数据库连接和 ORM
+    "asyncpg==0.29.0",          # PostgreSQL 异步驱动
+    "psycopg2-binary==2.9.9",   # PostgreSQL 同步驱动
+    "pgvector>=0.4.0",
+    "neo4j==5.15.0",            # Neo4j 图数据库驱动
+    "neomodel>=5.0",
+    "redis==5.0.1",             # Redis 缓存
+    "sqlalchemy==2.0.23",       # SQL ORM
+    "alembic==1.13.1",          # 数据库迁移
+    
+    # 向量数据库和搜索
+    "weaviate-client==3.25.3",  # Weaviate 向量数据库客户端
+    
+    # 对象存储
+    "minio==7.2.0",             # MinIO 对象存储客户端
+    
+    # 文档处理和解析
+    "PyPDF2==3.0.1",           # PDF 处理
+    "python-multipart==0.0.6",  # 文件上传支持
+    "python-magic==0.4.27",     # 文件类型检测
+    "Pillow==10.1.0",           # 图像处理
+    "langdetect>=1.0",
+    
+    # 自然语言处理和机器学习
+    "transformers==4.36.0",     # Hugging Face 模型
+    "torch==2.1.1",             # PyTorch
+    "sentence-transformers==2.2.2",  # 句子嵌入
+    "spacy==3.7.2",             # NLP 工具包
+    "nltk==3.8.1",              # 自然语言工具包
+    
+    # Microsoft GraphRAG 集成
+    "graphrag==0.3.0",          # Microsoft GraphRAG 核心库
+    "tiktoken==0.7.0",          # OpenAI 分词器
+    "openai>=1.37.1",            # OpenAI API 客户端（支持 Azure OpenAI）
+    "azure-identity>=1.17.1",   # Azure 身份验证（GraphRAG 兼容版本）
+    "azure-core>=1.29.5",       # Azure 核心库
+    
+    # 数据处理和分析
+    "pandas>=2.2.0",           # 数据分析
+    "numpy>=1.26.4,<2.0.0",    # 数值计算（满足 graspologic 和其他包的要求）
+    "scikit-learn>=1.4.2,<2.0.0",  # 机器学习
+    
+    # 系统监控和性能
+    "psutil==5.9.6",           # 系统资源监控
+    "prometheus-client==0.19.0",  # Prometheus 指标
+    
+    # 安全和认证
+    "python-jose[cryptography]==3.3.0",  # JWT 处理
+    "passlib[bcrypt]==1.7.4",   # 密码加密
+    
+    # 配置和环境管理
+    "python-dotenv==1.0.0",    # 环境变量管理
+    
+    # 日志和调试
+    "structlog==23.2.0",       # 结构化日志
+    "colorlog==6.8.0",         # 彩色日志输出
+    "python-json-logger==2.0.7",  # JSON 日志格式化
+    
+    # 异步任务和队列
+    "celery==5.3.4",           # 分布式任务队列
+    "kombu==5.3.4",            # 消息传递库
+    
+    # 其他工具
+    "click==8.1.7",            # 命令行工具
+    "rich==13.7.0",            # 富文本输出
+    "tqdm==4.66.1",            # 进度条
+]
+
+# 可选依赖组
+[project.optional-dependencies]
+# 开发依赖
+dev = [
+    "pytest==7.4.3",          # 测试框架
+    "pytest-asyncio==0.21.1",  # 异步测试支持
+    "pytest-cov==4.1.0",      # 测试覆盖率
+    "black==23.11.0",          # 代码格式化
+    "flake8==6.1.0",           # 代码检查
+    "mypy==1.7.1",             # 类型检查
+]
+
+# AWS 支持（可选）
+aws = [
+    "boto3==1.34.0",           # AWS S3 兼容客户端
+]
+
+[project.urls]
+Homepage = "https://github.com/your-org/graphrag-api"
+Documentation = "https://github.com/your-org/graphrag-api/docs"
+Repository = "https://github.com/your-org/graphrag-api.git"
+Issues = "https://github.com/your-org/graphrag-api/issues"
+
+# uv 特定配置
+[tool.uv]
+dev-dependencies = [
+    "pytest==7.4.3",
+    "pytest-asyncio==0.21.1",
+    "pytest-cov==4.1.0",
+    "black==23.11.0",
+    "flake8==6.1.0",
+    "mypy==1.7.1",
+]
+
+# 工具配置
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = [
+    "tests",
+]
+python_files = [
+    "test_*.py",
+    "*_test.py",
+]
+python_classes = [
+    "Test*",
+]
+python_functions = [
+    "test_*",
+]
+asyncio_mode = "auto"

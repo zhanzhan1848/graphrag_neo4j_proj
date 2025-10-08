@@ -126,6 +126,7 @@ class Settings(BaseSettings):
     LOG_MAX_SIZE: int = Field(default=10 * 1024 * 1024, description="单个日志文件最大大小（字节）")
     LOG_BACKUP_COUNT: int = Field(default=5, description="日志文件备份数量")
     LOG_ROTATION: str = Field(default="midnight", description="日志轮转时间")
+    LOG_DIR: str = Field(default="/app/logs", description="日志目录路径")
     
     # ==================== 文件处理配置 ====================
     UPLOAD_MAX_SIZE: int = Field(default=100 * 1024 * 1024, description="上传文件最大大小（字节）")
@@ -136,6 +137,7 @@ class Settings(BaseSettings):
         description="允许上传的文件类型"
     )
     TEMP_DIR: str = Field(default="temp", description="临时文件目录")
+    STORAGE_PATH: str = Field(default="/app/storage", description="文件存储根目录路径")
     
     # ==================== 处理配置 ====================
     CHUNK_SIZE: int = Field(default=1000, description="文本分块大小")
@@ -256,6 +258,7 @@ class Settings(BaseSettings):
         directories = [
             Path(self.LOG_FILE_PATH).parent,
             Path(self.TEMP_DIR),
+            Path(self.STORAGE_PATH),
         ]
         
         for directory in directories:
