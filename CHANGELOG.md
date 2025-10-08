@@ -5,7 +5,32 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+# 变更日志
+
+本文档记录了 GraphRAG 项目的所有重要变更。
+
+格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
+版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+
 ## [未发布]
+
+### 修复
+- 🔧 **Neo4j 会话管理** - 修复 AsyncSession 资源泄漏问题
+  - 修复了 `GraphService` 中 12 个方法的会话管理问题
+  - 将错误的 `async with` 语法替换为手动会话管理
+  - 为所有会话调用添加了 `finally` 块确保正确关闭
+  - 消除了 `ResourceWarning: Unclosed AsyncSession` 警告
+  - 涉及的类和方法：
+    - `GraphConnectionManager.health_check()`
+    - `GraphNodeManager`: `create_node()`, `get_node()`, `update_node()`, `delete_node()`, `find_nodes()`
+    - `GraphRelationshipManager`: `create_relationship()`, `get_relationship()`, `update_relationship()`, `delete_relationship()`, `find_relationships()`
+    - `GraphService.execute_cypher()`
+
+### 文档更新
+- 📚 **故障排查指南** - 更新了服务连接问题修复文档
+  - 添加了 Neo4j 会话资源泄漏问题的详细修复方案
+  - 提供了会话管理的最佳实践和错误模式说明
+  - 增加了资源泄漏监控和预防措施
 
 ### 新增
 - 完整的项目文档体系

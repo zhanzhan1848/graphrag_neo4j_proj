@@ -3138,6 +3138,37 @@ graph TD
 - 添加类型注解
 - 编写docstring文档
 
+#### Neo4j会话管理规范
+**重要**: 所有Neo4j异步会话必须遵循以下规范以避免资源泄漏：
+
+```python
+# ✅ 正确的会话管理模式
+async def database_operation(self):
+    session = await self.connection_manager.get_session()
+    try:
+        # 执行数据库操作
+        result = await session.run(query, parameters)
+        return await result.single()
+    except Exception as e:
+        logger.error(f"数据库操作失败: {str(e)}")
+        raise
+    finally:
+        # 必须在finally块中关闭会话
+        await session.close()
+
+# ❌ 错误的模式 - 不要使用async with
+# async with self.connection_manager.get_session() as session:
+#     # AsyncSession不是异步上下文管理器
+```
+
+**关键要求**:
+1. 每个 `session = await ... get_session()` 调用都必须有对应的 `finally` 块
+2. 在 `finally` 块中必须调用 `await session.close()`
+3. 绝不使用 `async with` 语法处理 `AsyncSession` 对象
+4. 即使发生异常，也要确保会话被正确关闭
+
+详细指南请参考: [Neo4j会话管理指南](./neo4j-session-management.md)
+
 ### TypeScript代码规范
 - 遵循ESLint配置
 - 使用Prettier格式化
