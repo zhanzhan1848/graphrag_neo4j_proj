@@ -503,6 +503,48 @@ class FileStorageService:
         
         return self.storage_path / category / hash_prefix / unique_filename
     
+    async def health_check(self) -> Dict[str, Any]:
+        """
+        文件存储服务健康检查
+        
+        Returns:
+            Dict[str, Any]: 健康状态信息
+        """
+        try:
+            health_status = {
+                "status": "healthy",
+                "timestamp": datetime.utcnow().isoformat(),
+                "storage_path": str(self.storage_path),
+                "storage_accessible": False,
+                "subdirectories": {}
+            }
+            
+            # 检查存储路径是否可访问
+            if self.storage_path.exists() and self.storage_path.is_dir():
+                health_status["storage_accessible"] = True
+                
+                # 检查子目录
+                subdirs = ['documents', 'images', 'temp', 'processed', 'backups']
+                for subdir in subdirs:
+                    subdir_path = self.storage_path / subdir
+                    health_status["subdirectories"][subdir] = {
+                        "exists": subdir_path.exists(),
+                        "writable": os.access(subdir_path, os.W_OK) if subdir_path.exists() else False
+                    }
+            else:
+                health_status["status"] = "unhealthy"
+                health_status["error"] = "存储路径不存在或不可访问"
+            
+            return health_status
+            
+        except Exception as e:
+            logger.error(f"文件存储服务健康检查失败: {str(e)}")
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+    
     async def _save_file_to_disk(self, file: UploadFile, storage_path: Path) -> None:
         """
         保存文件到磁盘

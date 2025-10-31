@@ -1,8 +1,57 @@
-# 测试策略和指南
+# GraphRAG 测试策略和指南
 
-## 概述
+## 📋 概述
 
 本文档详细说明了GraphRAG知识库系统的测试策略、测试框架和最佳实践。我们采用多层次的测试方法，确保系统的可靠性、性能和安全性。
+
+## 📚 文档结构
+
+- **[测试编写指南](test_guide.md)** - 详细的测试编写规范和最佳实践
+- **[环境配置指南](environment_setup.md)** - 测试环境的配置和管理
+- **[CI/CD集成指南](ci_cd_guide.md)** - 持续集成和部署的测试配置
+- **[故障排除指南](troubleshooting.md)** - 常见问题的解决方案和调试技巧
+- **[性能测试指南](performance_testing.md)** - 性能测试策略、工具和最佳实践
+
+## 🚀 快速开始
+
+### 环境设置
+
+1. **自动设置测试环境**
+   ```bash
+   ./scripts/setup_test_env.sh
+   ```
+
+2. **手动安装依赖**
+   ```bash
+   pip install -r requirements-test.txt
+   ```
+
+3. **运行所有测试**
+   ```bash
+   ./scripts/run_tests.sh --all
+   ```
+
+### 使用 Makefile
+
+```bash
+# 运行所有测试
+make test
+
+# 运行单元测试
+make test-unit
+
+# 运行集成测试
+make test-integration
+
+# 生成覆盖率报告
+make coverage
+
+# 检查代码质量
+make lint
+
+# 格式化代码
+make format
+```
 
 ## 测试架构
 

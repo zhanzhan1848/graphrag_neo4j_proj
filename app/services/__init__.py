@@ -24,7 +24,7 @@ GraphRAG 服务模块
 """
 
 from .document_service import DocumentService
-# from .file_service import FileService
+from .file_service import FileService
 from .file_storage_service import FileStorageService
 from .text_service import TextService
 from .embedding_service import EmbeddingService

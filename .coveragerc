@@ -1,0 +1,134 @@
+# GraphRAG 项目覆盖率配置
+# ============================
+
+[run]
+# 源代码目录
+source = app
+
+# 包含的文件模式
+include = 
+    app/*
+    app/**/*
+
+# 排除的文件模式
+omit = 
+    */tests/*
+    */test_*
+    */__pycache__/*
+    */migrations/*
+    */venv/*
+    */env/*
+    */.venv/*
+    */site-packages/*
+    app/main.py
+    */conftest.py
+    */fixtures/*
+    */scripts/*
+
+# 并行模式
+parallel = true
+
+# 分支覆盖
+branch = true
+
+# 数据文件
+data_file = .coverage
+
+# 上下文
+context = ${COVERAGE_CONTEXT}
+
+[report]
+# 跳过覆盖的文件
+skip_covered = false
+
+# 跳过空文件
+skip_empty = true
+
+# 显示缺失的行
+show_missing = true
+
+# 精度
+precision = 2
+
+# 排序
+sort = Cover
+
+# 排除的行（使用注释标记）
+exclude_lines =
+    # 标准排除
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    if settings.DEBUG
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
+    
+    # 类型检查
+    if TYPE_CHECKING:
+    if typing.TYPE_CHECKING:
+    
+    # 调试代码
+    import pdb
+    pdb.set_trace()
+    
+    # 日志
+    logger\.debug
+    
+    # 异常处理
+    except ImportError:
+    except ModuleNotFoundError:
+    
+    # 平台特定代码
+    if sys.platform
+    if platform.system
+
+# 部分分支排除
+partial_branches =
+    pragma: no branch
+    if settings.DEBUG:
+    if 0:
+
+[html]
+# HTML报告目录
+directory = htmlcov
+
+# 额外的CSS
+extra_css = 
+
+# 显示上下文
+show_contexts = true
+
+# 跳过覆盖的文件
+skip_covered = false
+
+# 跳空文件
+skip_empty = true
+
+# 标题
+title = GraphRAG 测试覆盖率报告
+
+[xml]
+# XML报告文件
+output = coverage.xml
+
+[json]
+# JSON报告文件
+output = coverage.json
+
+# 美化输出
+pretty_print = true
+
+# 显示上下文
+show_contexts = true
+
+[paths]
+# 路径映射（用于不同环境）
+source =
+    app/
+    /app/
+    */app/
+    */GraphRAG_NEO_IMG/app/

@@ -140,8 +140,9 @@ class ProcessingStatus(BaseModel):
 
 async def get_document_service() -> DocumentService:
     """获取文档服务实例"""
-    from app.services.document_service import DocumentService
-    return DocumentService()
+    from app.core.database import get_db
+    db = next(get_db())
+    return DocumentService(db)
 
 
 async def get_file_storage_service() -> FileStorageService:
@@ -250,10 +251,11 @@ async def upload_document(
         file_content = await file.read()
         
         # 存储文件
-        file_path = await file_storage_service.store_file(
-            file_content=file_content,
+        file_path, file_info = await file_storage_service.save_file_content(
+            content=file_content,
             filename=file.filename,
-            document_id=document_id
+            mime_type=file.content_type,
+            category="documents"
         )
         
         # 创建文档记录

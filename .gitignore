@@ -350,3 +350,5 @@ docs/build/
 uploads/
 user-data/
 documents/
+
+.trae/
