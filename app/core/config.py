@@ -122,11 +122,11 @@ class Settings(BaseSettings):
         description="日志格式"
     )
     LOG_FILE_ENABLED: str = Field(default="true", description="是否启用日志文件")
-    LOG_FILE_PATH: str = Field(default="/app/logs/app.log", description="日志文件路径")
+    LOG_FILE_PATH: str = Field(default="logs/app.log", description="日志文件路径")
     LOG_MAX_SIZE: int = Field(default=10 * 1024 * 1024, description="单个日志文件最大大小（字节）")
     LOG_BACKUP_COUNT: int = Field(default=5, description="日志文件备份数量")
     LOG_ROTATION: str = Field(default="midnight", description="日志轮转时间")
-    LOG_DIR: str = Field(default="/app/logs", description="日志目录路径")
+    LOG_DIR: str = Field(default="logs", description="日志目录路径")
     
     # ==================== 文件处理配置 ====================
     UPLOAD_MAX_SIZE: int = Field(default=100 * 1024 * 1024, description="上传文件最大大小（字节）")
@@ -137,7 +137,7 @@ class Settings(BaseSettings):
         description="允许上传的文件类型"
     )
     TEMP_DIR: str = Field(default="temp", description="临时文件目录")
-    STORAGE_PATH: str = Field(default="/app/storage", description="文件存储根目录路径")
+    STORAGE_PATH: str = Field(default="storage", description="文件存储根目录路径")
     
     # ==================== 处理配置 ====================
     CHUNK_SIZE: int = Field(default=1000, description="文本分块大小")
@@ -153,7 +153,7 @@ class Settings(BaseSettings):
     HUGGINGFACE_API_KEY: str = Field(default="your-huggingface-api-key", description="Hugging Face API 密钥")
     
     # 本地模型配置
-    LOCAL_MODEL_PATH: str = Field(default="/app/models", description="本地模型路径")
+    LOCAL_MODEL_PATH: str = Field(default="models", description="本地模型路径")
     
     # MinerU 配置
     MINERU_HOST: str = Field(default="localhost", description="MinerU 主机地址")
@@ -255,6 +255,10 @@ class Settings(BaseSettings):
     
     def ensure_directories(self):
         """确保必要的目录存在"""
+        # 在CI/CD环境中，跳过目录创建以避免权限问题
+        if os.getenv("CI") or os.getenv("GITHUB_ACTIONS"):
+            return
+            
         directories = [
             Path(self.LOG_FILE_PATH).parent,
             Path(self.TEMP_DIR),
@@ -262,7 +266,16 @@ class Settings(BaseSettings):
         ]
         
         for directory in directories:
-            directory.mkdir(parents=True, exist_ok=True)
+            try:
+                directory.mkdir(parents=True, exist_ok=True)
+            except PermissionError:
+                # 在权限不足时，使用临时目录
+                import tempfile
+                temp_dir = Path(tempfile.gettempdir()) / "graphrag" / directory.name
+                temp_dir.mkdir(parents=True, exist_ok=True)
+                print(f"Warning: Using temporary directory {temp_dir} instead of {directory}")
+            except Exception as e:
+                print(f"Warning: Could not create directory {directory}: {e}")
     
     class Config:
         """Pydantic 配置"""
