@@ -98,6 +98,9 @@ jobs:
           mkdir -p /tmp/graphrag/{temp,storage,logs,models}
           
       - name: Run unit tests
+        env:
+          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
         run: |
           uv run pytest tests/unit/ \
             --cov=app \
@@ -208,6 +211,8 @@ jobs:
           NEO4J_USER: neo4j
           NEO4J_PASSWORD: test_password
           REDIS_URL: redis://localhost:6379/0
+          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
         run: |
           # 创建数据库表
           uv run python -c "
@@ -227,6 +232,8 @@ jobs:
           NEO4J_PASSWORD: test_password
           REDIS_URL: redis://localhost:6379/0
           TESTING: true
+          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
         run: |
           uv run pytest tests/integration/ \
             --cov=app \
