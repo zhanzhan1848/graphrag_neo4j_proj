@@ -19,6 +19,7 @@ jobs:
   code-quality:
     name: Code Quality
     runs-on: ubuntu-latest
+    environment: Test_Env
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -61,6 +62,7 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    environment: Test_Env
     needs: code-quality
     strategy:
       matrix:
@@ -125,6 +127,7 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
+    environment: Test_Env
     needs: unit-tests
     
     services:
@@ -245,6 +248,7 @@ jobs:
   performance-tests:
     name: Performance Tests
     runs-on: ubuntu-latest
+    environment: Test_Env
     needs: integration-tests
     if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[perf]')
     
@@ -283,6 +287,7 @@ jobs:
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
+    environment: Test_Env
     needs: code-quality
     
     steps:
