@@ -41,7 +41,7 @@ jobs:
           
       - name: Install dependencies
         run: |
-          uv sync --dev
+          uv pip install --system --no-cache -r pyproject.toml
           
       - name: Code formatting check
         run: |
@@ -89,7 +89,7 @@ jobs:
           
       - name: Install dependencies
         run: |
-          uv sync --dev
+          uv pip install --system --no-cache -r pyproject.toml
           
       - name: Setup CI environment
         run: |
@@ -188,7 +188,7 @@ jobs:
           
       - name: Install dependencies
         run: |
-          uv sync --dev
+          uv pip install --system --no-cache -r pyproject.toml
           
       - name: Setup CI environment
         run: |
@@ -264,7 +264,7 @@ jobs:
           
       - name: Install dependencies
         run: |
-          uv sync --dev
+          uv pip install --system --no-cache -r pyproject.toml
           
       - name: Run performance tests
         run: |
@@ -301,7 +301,7 @@ jobs:
           
       - name: Install dependencies
         run: |
-          uv sync --dev
+          uv pip install --system --no-cache -r pyproject.toml
           
       - name: Run Bandit security scan
         run: |
