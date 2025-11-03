@@ -97,10 +97,15 @@ jobs:
         run: |
           mkdir -p /tmp/graphrag/{temp,storage,logs,models}
           
-      - name: Run unit tests
+      - name: Generate .env file
         env:
           AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+        run: |
+          chmod +x scripts/generate_env_file.sh
+          ./scripts/generate_env_file.sh
+          
+      - name: Run unit tests
         run: |
           uv run pytest tests/unit/ \
             --cov=app \
@@ -214,6 +219,10 @@ jobs:
           AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
         run: |
+          # 生成.env文件
+          chmod +x scripts/generate_env_file.sh
+          ./scripts/generate_env_file.sh
+          
           # 创建数据库表
           uv run python -c "
           import sys
@@ -232,8 +241,6 @@ jobs:
           NEO4J_PASSWORD: test_password
           REDIS_URL: redis://localhost:6379/0
           TESTING: true
-          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
-          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
         run: |
           uv run pytest tests/integration/ \
             --cov=app \
@@ -278,7 +285,14 @@ jobs:
           uv sync --dev
           
       - name: Run performance tests
+        env:
+          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
         run: |
+          # 生成.env文件
+          chmod +x scripts/generate_env_file.sh
+          ./scripts/generate_env_file.sh
+          
           uv run pytest tests/ -m performance \
             --benchmark-only \
             --benchmark-json=benchmark.json \
