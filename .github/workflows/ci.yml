@@ -9,18 +9,6 @@ on:
     # 每天凌晨2点运行完整测试
     - cron: '0 2 * * *'
 
-env:
-  PYTHON_VERSION: '3.11'
-  CI: true
-  GITHUB_ACTIONS: true
-  AZURE_OPENAI_API_KEY: ${{ env.AZURE_OPENAI_API_KEY }}
-  AZURE_OPENAI_ENDPOINT: ${{ env.AZURE_OPENAI_ENDPOINT }}
-  AZURE_OPENAI_API_VERSION: ${{ env.AZURE_OPENAI_API_VERSION }}
-  AZURE_OPENAI_EMBEDDING_DEPLOYMENT: ${{ env.AZURE_OPENAI_EMBEDDING_DEPLOYMENT }}
-  AZURE_OPENAI_EMBEDDING_MODEL: ${{ env.AZURE_OPENAI_EMBEDDING_MODEL }}
-  AZURE_LLM_DEPLOYMENT: ${{ env.AZURE_LLM_DEPLOYMENT }}
-  AZURE_LLM_MODEL: ${{ env.AZURE_LLM_MODEL }}
-
 jobs:
   # 代码质量检查
   code-quality:
@@ -68,6 +56,7 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    environment: Test_Env
     needs: code-quality
     strategy:
       matrix:
@@ -254,6 +243,7 @@ jobs:
   performance-tests:
     name: Performance Tests
     runs-on: ubuntu-latest
+    environment: Test_Env
     needs: integration-tests
     if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[perf]')
     
@@ -336,6 +326,7 @@ jobs:
   build-image:
     name: Build Docker Image
     runs-on: ubuntu-latest
+    environment: Test_Env
     needs: [unit-tests, integration-tests]
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
     
