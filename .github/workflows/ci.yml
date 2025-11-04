@@ -13,13 +13,19 @@ env:
   PYTHON_VERSION: '3.11'
   CI: true
   GITHUB_ACTIONS: true
+  AZURE_OPENAI_API_KEY: ${{ env.AZURE_OPENAI_API_KEY }}
+  AZURE_OPENAI_ENDPOINT: ${{ env.AZURE_OPENAI_ENDPOINT }}
+  AZURE_OPENAI_API_VERSION: ${{ env.AZURE_OPENAI_API_VERSION }}
+  AZURE_OPENAI_EMBEDDING_DEPLOYMENT: ${{ env.AZURE_OPENAI_EMBEDDING_DEPLOYMENT }}
+  AZURE_OPENAI_EMBEDDING_MODEL: ${{ env.AZURE_OPENAI_EMBEDDING_MODEL }}
+  AZURE_LLM_DEPLOYMENT: ${{ env.AZURE_LLM_DEPLOYMENT }}
+  AZURE_LLM_MODEL: ${{ env.AZURE_LLM_MODEL }}
 
 jobs:
   # 代码质量检查
   code-quality:
     name: Code Quality
     runs-on: ubuntu-latest
-    environment: Test_Env
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -62,7 +68,6 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
-    environment: Test_Env
     needs: code-quality
     strategy:
       matrix:
@@ -97,14 +102,6 @@ jobs:
         run: |
           mkdir -p /tmp/graphrag/{temp,storage,logs,models}
           
-      - name: Generate .env file
-        env:
-          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
-          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
-        run: |
-          chmod +x scripts/generate_env_file.sh
-          ./scripts/generate_env_file.sh
-          
       - name: Run unit tests
         run: |
           uv run pytest tests/unit/ \
@@ -135,7 +132,6 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
-    environment: Test_Env
     needs: unit-tests
     
     services:
@@ -219,10 +215,6 @@ jobs:
           AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
         run: |
-          # 生成.env文件
-          chmod +x scripts/generate_env_file.sh
-          ./scripts/generate_env_file.sh
-          
           # 创建数据库表
           uv run python -c "
           import sys
@@ -262,7 +254,6 @@ jobs:
   performance-tests:
     name: Performance Tests
     runs-on: ubuntu-latest
-    environment: Test_Env
     needs: integration-tests
     if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[perf]')
     
@@ -289,10 +280,6 @@ jobs:
           AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
         run: |
-          # 生成.env文件
-          chmod +x scripts/generate_env_file.sh
-          ./scripts/generate_env_file.sh
-          
           uv run pytest tests/ -m performance \
             --benchmark-only \
             --benchmark-json=benchmark.json \
@@ -308,7 +295,6 @@ jobs:
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
-    environment: Test_Env
     needs: code-quality
     
     steps:
