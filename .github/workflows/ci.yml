@@ -57,6 +57,9 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     environment: Test_Env
+    env:
+      AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ vars.AZURE_OPENAI_API_KEY }}
     needs: code-quality
     strategy:
       matrix:
@@ -121,6 +124,9 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
+    env:
+      AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ vars.AZURE_OPENAI_API_KEY }}
     needs: unit-tests
     
     services:
@@ -169,7 +175,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: '3.11'
           
       - name: Cache dependencies
         uses: actions/cache@v3
@@ -201,8 +207,6 @@ jobs:
           NEO4J_USER: neo4j
           NEO4J_PASSWORD: test_password
           REDIS_URL: redis://localhost:6379/0
-          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
-          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
         run: |
           # 创建数据库表
           uv run python -c "
@@ -244,6 +248,9 @@ jobs:
     name: Performance Tests
     runs-on: ubuntu-latest
     environment: Test_Env
+    env:
+      AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ vars.AZURE_OPENAI_API_KEY }}
     needs: integration-tests
     if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[perf]')
     
@@ -254,7 +261,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: '3.11'
           
       - name: Install uv
         uses: astral-sh/setup-uv@v3
@@ -266,9 +273,6 @@ jobs:
           uv sync --dev
           
       - name: Run performance tests
-        env:
-          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
-          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
         run: |
           uv run pytest tests/ -m performance \
             --benchmark-only \
@@ -294,7 +298,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: '3.11'
           
       - name: Install uv
         uses: astral-sh/setup-uv@v3
@@ -327,6 +331,9 @@ jobs:
     name: Build Docker Image
     runs-on: ubuntu-latest
     environment: Test_Env
+    env:
+      AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ vars.AZURE_OPENAI_API_KEY }}
     needs: [unit-tests, integration-tests]
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
     
